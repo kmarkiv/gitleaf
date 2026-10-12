@@ -1,0 +1,79 @@
+\documentclass[sigconf,review,anonymous]{acmart}
+%% Final version: \documentclass[sigconf]{acmart} and fill in the rights block.
+\settopmatter{printacmref=false}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+\pagestyle{plain}
+
+\usepackage{booktabs}
+\usepackage{graphicx}
+
+\begin{document}
+
+\title{Paper Title}
+
+\author{First Author}
+\email{first@example.org}
+\affiliation{%
+  \institution{Institution}
+  \city{City}
+  \country{Country}}
+
+\author{Second Author}
+\email{second@example.org}
+\affiliation{%
+  \institution{Institution}
+  \city{City}
+  \country{Country}}
+
+\begin{abstract}
+One paragraph that states the problem, the approach, and the main result.
+\end{abstract}
+
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10003120.10003121</concept_id>
+       <concept_desc>Human-centered computing~Human computer interaction (HCI)</concept_desc>
+       <concept_significance>500</concept_significance>
+   </concept>
+</ccs2012>
+\end{CCSXML}
+\ccsdesc[500]{Human-centered computing~Human computer interaction (HCI)}
+
+\keywords{keyword one, keyword two}
+
+\maketitle
+
+\section{Introduction}
+Start here. Cite related work like this~\cite{knuth1984,lamport1986}.
+
+\section{Related Work}
+Group prior work by theme, and end each group with what remains open.
+
+\section{Method}
+Describe participants, materials, procedure, and analysis.
+
+\section{Results}
+\begin{table}[t]
+  \caption{A small table.}
+  \label{tab:example}
+  \begin{tabular}{lrr}
+    \toprule
+    Condition & $n$ & Mean \\
+    \midrule
+    Control   & 40  & 1.2  \\
+    Treatment & 40  & 2.4  \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Discussion}
+Interpret the results, state limitations, and give implications for design.
+
+\section{Conclusion}
+Summarise the contribution.
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{refs}
+
+\end{document}

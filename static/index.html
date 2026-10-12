@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gitleaf</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/assets/app.css">
+
+</head>
+<body>
+<header id="top">
+  <div class="left">
+    <button id="sidebar-toggle" title="Show or hide files (⌘/Ctrl+B)" aria-label="Toggle file explorer">☰</button>
+    <span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>gitleaf</span>
+    <button id="projbtn" class="menubtn" title="Switch project" aria-label="Switch project"><span id="projname">— project —</span><span class="caret">▾</span></button>
+    <button id="newbtn" class="ghost newbtn" title="New project: template, Overleaf gallery, git URL or zip" aria-label="New project: template, Overleaf gallery, git URL or zip">＋ New</button>
+    <span id="branch" class="dim" title="Current git branch"></span>
+  </div>
+  <div class="center">
+    <button id="compile" class="primary idle" title="Save and compile (⌘/Ctrl+Enter)" aria-label="Save and compile (⌘/Ctrl+Enter)">▶ Compile</button>
+    <button id="cstatus" aria-live="polite" title="Click for problems and logs" aria-label="Click for problems and logs"></button>
+  </div>
+  <div class="right">
+    <button id="updatebtn" class="ghost updatebtn" hidden title="Download an available update and restart" aria-label="Update GitLeaf"></button>
+    <span id="savestate" role="status" aria-live="polite"></span>
+    <button id="focusexit" class="ghost" title="Exit focus mode (Esc)" aria-label="Exit focus mode (Esc)">Exit focus</button>
+    <button id="gitbtn" class="menubtn" title="Commit, push, pull, history" aria-label="Commit, push, pull, history">Git <span id="gitbadge" class="badge"></span><span class="caret">▾</span></button>
+    <button id="histbtn" class="ghost" title="Recent commits" aria-label="Recent commits">History</button>
+    <button id="viewbtn" class="ghost" title="View and settings" aria-label="View and settings">⋯</button>
+  </div>
+</header>
+<main>
+  <aside id="side">
+    <div class="side-hd">
+      <input id="filter" type="search" placeholder="Search files…" autocomplete="off" title="Filter files (⌘⇧P)" aria-label="Filter files (⌘⇧P)">
+      <button id="newfile" title="New file" aria-label="New file">＋</button>
+      <button id="newfolder" title="New folder" aria-label="New folder">▣</button>
+      <button id="upload" title="Upload files into the project" aria-label="Upload files into the project">⇡</button>
+    </div>
+    <div class="side-sec">Project files</div>
+    <div id="files"></div>
+    <div class="side-sec click" id="gen-hd" title="Build outputs and auxiliary files"><span class="tw">▸</span>Generated files <span id="gencount" class="dim"></span></div>
+    <div id="genfiles" hidden></div>
+    <input type="file" id="uploadinput" multiple hidden>
+  </aside>
+  <div role="separator" tabindex="0" aria-orientation="vertical" aria-label="Resize file explorer" class="gutter side" data-for="sidew" title="Drag to resize; double-click to reset"></div>
+  <section id="editor">
+    <div id="tabs" role="tablist" aria-label="Open files"></div>
+    <div id="vtoolbar">
+      <button data-cmd="bold" title="Bold (⌘B)" aria-label="Bold (⌘B)"><b>B</b></button>
+      <button data-cmd="italic" title="Italic (⌘I)" aria-label="Italic (⌘I)"><i>I</i></button>
+      <button data-cmd="underline" title="Underline (⌘U)" aria-label="Underline (⌘U)"><u>U</u></button>
+      <span class="sep"></span>
+      <button data-blk="para" title="Make this block a paragraph" aria-label="Make this block a paragraph">¶</button>
+      <button data-blk="section" title="Make this block a section heading" aria-label="Make this block a section heading">H1</button>
+      <button data-blk="subsection" title="Make this block a subsection heading" aria-label="Make this block a subsection heading">H2</button>
+      <button data-blk="subsubsection" title="Make this block a subsubsection heading" aria-label="Make this block a subsubsection heading">H3</button>
+      <span class="sep"></span>
+      <button data-ins="cite" title="Insert citation" aria-label="Insert citation">Cite</button>
+      <button data-ins="ref" title="Insert cross-reference" aria-label="Insert cross-reference">Ref</button>
+      <button data-ins="math" title="Insert inline math" aria-label="Insert inline math">∑</button>
+      <button data-ins="footnote" title="Insert footnote" aria-label="Insert footnote">Fn</button>
+      <span class="sep"></span>
+      <button data-new="list" title="Insert bullet list after this block" aria-label="Insert bullet list after this block">• List</button>
+      <button data-new="enum" title="Insert numbered list after this block" aria-label="Insert numbered list after this block">1. List</button>
+      <button data-new="figure" title="Insert figure after this block" aria-label="Insert figure after this block">Figure</button>
+      <button data-new="table" title="Insert table after this block" aria-label="Insert table after this block">Table</button>
+      <button data-new="equation" title="Insert numbered equation after this block" aria-label="Insert numbered equation after this block">Equation</button>
+      <button data-new="raw" title="Insert a raw LaTeX block after this block" aria-label="Insert a raw LaTeX block after this block">LaTeX</button>
+      <span class="spacer" style="flex:1"></span>
+      <span class="muted">Double-click a chip to edit its LaTeX. Enter splits a paragraph; Shift+Enter inserts \\.</span>
+    </div>
+    <div id="code-host"></div>
+    <div id="visual"></div>
+    <div id="preview"></div>
+    <div id="problems" hidden>
+      <div class="ph">
+        <button class="ptab on" data-p="problems">Problems<span class="cnt" id="pcount"></span><span class="cnt w" id="wcount"></span></button>
+        <button class="ptab" data-p="logs">Logs</button>
+        <span class="spacer"></span>
+        <button class="ghost" id="pclose" title="Close" aria-label="Close">×</button>
+      </div>
+      <div id="plist"></div>
+      <pre id="log"></pre>
+    </div>
+    <div id="estatus">
+      <span id="pos">Ln 1, Col 1</span><span id="lang">LaTeX</span><span>Spaces: 2</span><span>UTF-8</span>
+      <span class="spacer"></span>
+      <button id="modebtn" class="link" title="Switch between LaTeX source and the visual editor" aria-label="Switch between LaTeX source and the visual editor">Visual</button>
+      <button id="syncbtn" class="link" title="Go to this line in the PDF (⌘J)" aria-label="Go to this line in the PDF (⌘J)">Source → PDF</button>
+    </div>
+  </section>
+  <div role="separator" tabindex="0" aria-orientation="vertical" aria-label="Resize PDF preview" class="gutter pdf" data-for="pdfw" title="Drag to resize; double-click to reset"></div>
+  <section id="pdfpane">
+    <div class="pdfbar">
+      <div class="grp"><button id="pgprev" title="Previous page" aria-label="Previous page">▲</button><input id="pageno" type="text" value="1" title="Page" aria-label="Page"><span id="pagecount">/ –</span><button id="pgnext" title="Next page" aria-label="Next page">▼</button></div>
+      <span class="sep"></span>
+      <div class="grp"><button id="zoomout" title="Zoom out" aria-label="Zoom out">−</button><span id="zoomlbl">100%</span><button id="zoomin" title="Zoom in" aria-label="Zoom in">+</button>
+        <select id="zoommode" title="Zoom mode" aria-label="Zoom mode"><option value="width">Fit width</option><option value="page">Fit page</option><option value="custom">Custom</option></select></div>
+      <span class="spacer"></span>
+      <input id="pdfsearch" type="search" placeholder="Search PDF" title="Search text in the PDF (Enter for next)" aria-label="Search text in the PDF (Enter for next)"><span id="searchinfo"></span>
+      <span class="sep"></span>
+      <a id="pdf-download" class="btn off" title="Download PDF" aria-label="Download PDF">⤓</a>
+      <button id="pdffull" title="Fullscreen PDF" aria-label="Fullscreen PDF">⤢</button>
+    </div>
+    <div id="pdfscroll"><div id="pdfpages"></div><div id="syncmark"></div><div id="pdf-empty"><div>No PDF yet.</div><div class="muted">Press ▶ Compile.</div></div></div>
+  </section>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="startup-error" role="alert">GitLeaf is loading. If this message stays visible, reload the page.</div>
+
+<dialog id="dlg">
+  <h3>Commit changes</h3>
+  <div class="muted" id="dlg-info"></div>
+  <pre id="changes"></pre>
+  <textarea id="msg" rows="3" placeholder="What changed? (⌘Enter to commit)"></textarea>
+  <div class="row"><button id="dlg-cancel">Cancel</button><button id="dlg-commit">Commit</button><button id="dlg-commitpush" class="primary">Commit &amp; push</button></div>
+</dialog>
+<dialog id="hdlg"><h3>History</h3><pre id="hist"></pre><div class="row"><button id="hdlg-close">Close</button></div></dialog>
+<dialog id="ndlg" class="wide">
+  <h3>New project</h3>
+  <div class="tabs">
+    <button data-tab="templates" class="on">Built-in templates</button>
+    <button data-tab="overleaf">Overleaf gallery</button>
+    <button data-tab="git">Git / Overleaf project</button>
+    <button data-tab="zip">Zip</button>
+  </div>
+  <section class="pane" data-pane="templates"><div class="cards" id="n-cards"></div></section>
+  <section class="pane" data-pane="overleaf" hidden>
+    <div class="searchrow"><input id="ol-q" type="search" placeholder="Search Overleaf templates by tag, e.g. acm, ieee, thesis, cv, poster…"><button id="ol-go">Browse</button></div>
+    <div class="chips" id="ol-tags"></div>
+    <div class="cards" id="ol-cards"><div class="muted">Pick a tag above.</div></div>
+    <div class="howto" id="ol-cands" hidden></div>
+    <div class="howto" id="ol-steps">
+      <div class="steps">
+        <div class="step" id="ol-s1"><span class="n">1</span><div><b>Pick a template</b> above and press <b>Import</b>. gitleaf fetches it from the template's GitHub repository when one exists (most popular templates). Otherwise it opens the template in Overleaf, where you press <i>Open as Template</i> (Overleaf hands out sources only to logged-in users), and the steps below apply.</div></div>
+        <div class="step" id="ol-s2"><span class="n">2</span><div><b>Copy the new project's address</b> from Overleaf's address bar (<code>overleaf.com/project/…</code>) and paste it here. Coming back to this window with it on the clipboard fills it in automatically.
+          <div class="searchrow"><input id="ol-link" type="text" placeholder="https://www.overleaf.com/project/…"></div></div></div>
+        <div class="step" id="ol-s3"><span class="n">3</span><div><b>Press Import again.</b> gitleaf clones the project over Overleaf's git bridge, so Pull and Push keep it in sync with Overleaf.</div></div>
+      </div>
+      <div class="muted" style="margin-top:8px">Alternative without git: in Overleaf use <i>Menu → Download → Source</i> and drop that zip here.</div>
+      <div class="drop" id="ol-drop">Drop the Overleaf source zip here, or click to choose<input id="ol-zip" type="file" accept=".zip,application/zip" hidden></div>
+    </div>
+  </section>
+  <section class="pane" data-pane="git" hidden>
+    <label class="lbl">Repository URL <input id="n-git" type="text" placeholder="https://github.com/user/repo.git  ·  git@github.com:user/repo.git  ·  https://www.overleaf.com/project/…"></label>
+    <div class="muted">Overleaf project links are cloned over git.overleaf.com (Overleaf → Menu → Git shows the same URL). GitHub and any other git host work with the credentials git already has.</div>
+  </section>
+  <section class="pane" data-pane="zip" hidden>
+    <label class="lbl">Zip from a URL <input id="n-url" type="text" placeholder="https://…/template.zip  or  https://github.com/user/repo"></label>
+    <div class="drop" id="n-drop">Drop a zip here, or click to choose<input id="n-zip" type="file" accept=".zip,application/zip" hidden></div>
+    <div class="muted">A zip is unpacked into a fresh git repository with one initial commit. CTAN, publisher sites and GitHub archives all work.</div>
+  </section>
+  <div class="foot">
+    <label>Name <input id="n-name" type="text" placeholder="my-paper"></label>
+    <label>Push to (optional) <input id="n-remote" type="text" placeholder="git@github.com:user/repo.git"></label>
+    <span class="dmsg" id="n-msg"></span>
+    <span class="spacer"></span>
+    <button id="n-cancel">Cancel</button>
+    <button id="n-create" class="primary">Create</button>
+  </div>
+</dialog>
+
+<script type="module" src="/assets/app.js"></script>
+</body>
+</html>

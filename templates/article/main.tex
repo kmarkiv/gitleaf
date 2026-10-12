@@ -1,0 +1,54 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage[hidelinks]{hyperref}
+\usepackage[round]{natbib}
+
+\title{Paper Title}
+\author{First Author \and Second Author}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+One paragraph that states the problem, the approach, and the main result.
+\end{abstract}
+
+\section{Introduction}
+Start here. Cite related work like this \citep{knuth1984} or inline like \citet{lamport1986}.
+
+\section{Method}
+Equations work as usual:
+\begin{equation}
+  E = mc^2 .
+  \label{eq:energy}
+\end{equation}
+Equation~\ref{eq:energy} is referenced here.
+
+\section{Results}
+\begin{table}[htbp]
+  \centering
+  \caption{A small table.}
+  \label{tab:example}
+  \begin{tabular}{lrr}
+    \toprule
+    Condition & $n$ & Mean \\
+    \midrule
+    Control   & 40  & 1.2  \\
+    Treatment & 40  & 2.4  \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Conclusion}
+Summarise the contribution.
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+\end{document}

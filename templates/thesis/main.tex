@@ -1,0 +1,49 @@
+\documentclass[12pt,a4paper,oneside]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{setspace}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage[hidelinks]{hyperref}
+\usepackage[round]{natbib}
+
+\onehalfspacing
+
+\begin{document}
+
+\begin{titlepage}
+  \centering
+  \vspace*{3cm}
+  {\LARGE\bfseries Thesis Title\par}
+  \vspace{1.5cm}
+  {\large Student Name\par}
+  \vspace{0.5cm}
+  {\large Supervisor: Supervisor Name\par}
+  \vfill
+  {\large Department\\Institution\\\today\par}
+\end{titlepage}
+
+\chapter*{Abstract}
+One page that states the problem, the approach, the main results, and the contribution.
+
+\tableofcontents
+
+\input{chapters/introduction}
+\input{chapters/background}
+\input{chapters/method}
+\input{chapters/results}
+\input{chapters/discussion}
+\input{chapters/conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\appendix
+\chapter{Supplementary Material}
+Questionnaires, code listings, and extra tables.
+
+\end{document}

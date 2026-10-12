@@ -1,0 +1,9 @@
+/target
+*.zip
+/c*.json
+.DS_Store
+body.txt
+
+/node_modules
+/static/assets
+/test-artifacts
