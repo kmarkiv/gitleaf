@@ -7,3 +7,5 @@ body.txt
 /node_modules
 /static/assets
 /test-artifacts
+/gitleaf
+/gitleaf.exe

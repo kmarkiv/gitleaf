@@ -28,7 +28,7 @@ the buttons download the same file if you prefer clicking (then see the note und
 <a href="https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-arm64"><img src="https://img.shields.io/badge/Download-macOS%20Apple%20silicon-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Download gitleaf for Mac with Apple silicon"></a>
 
 ```bash
-curl -L -o gitleaf https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-arm64 && chmod +x gitleaf && ./gitleaf
+cd ~/Downloads && curl -L -o gitleaf https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-arm64 && chmod +x gitleaf && ./gitleaf
 ```
 
 Not sure which Mac you have? Apple menu → About This Mac: "Chip: Apple M…" means this row; "Processor: Intel" means the next one.
@@ -38,7 +38,7 @@ Not sure which Mac you have? Apple menu → About This Mac: "Chip: Apple M…" m
 <a href="https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-x86_64"><img src="https://img.shields.io/badge/Download-macOS%20Intel-555555?style=for-the-badge&logo=apple&logoColor=white" alt="Download gitleaf for Intel Mac"></a>
 
 ```bash
-curl -L -o gitleaf https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-x86_64 && chmod +x gitleaf && ./gitleaf
+cd ~/Downloads && curl -L -o gitleaf https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-x86_64 && chmod +x gitleaf && ./gitleaf
 ```
 
 If you clicked a button instead, macOS blocks the file once because it is not notarized. Run this in the
@@ -65,13 +65,13 @@ Invoke-WebRequest https://github.com/kmarkiv/gitleaf/releases/latest/download/gi
 <a href="https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-linux-arm64"><img src="https://img.shields.io/badge/Download-Linux%20ARM64-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Download gitleaf for Linux ARM64"></a>
 
 ```bash
-curl -L -o gitleaf https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-linux-x86_64 && chmod +x gitleaf && ./gitleaf
+cd ~/Downloads && curl -L -o gitleaf https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-linux-x86_64 && chmod +x gitleaf && ./gitleaf
 ```
 
 On a Raspberry Pi or other ARM machine use `gitleaf-linux-arm64` in that command.
 
-Keep the `gitleaf` file wherever you like (for example `~/bin`); later versions update themselves from inside
-the app.
+To start it again later, run `~/Downloads/gitleaf` (or move the file somewhere permanent, such as `~/bin`, and run
+it from there). Your papers live in `~/Documents/gitleaf`; later versions update themselves from inside the app.
 
 **Requirements:** `git` (Git for Windows on Windows). A LaTeX installation is optional: when none is found, the
 first Compile offers to download a checksum-verified [Tectonic](https://tectonic-typesetting.github.io/), a self-contained engine that

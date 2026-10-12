@@ -55,13 +55,35 @@ fn home() -> PathBuf {
 }
 
 fn default_root() -> PathBuf {
-    let docs = home().join("Documents");
+    pick_root(&home().join("Documents"))
+}
+
+/// Default projects folder inside `docs`: the legacy Codex/Overleaf folder when present, else
+/// `gitleaf`, unless something that is not a folder already has that name (typically the
+/// downloaded `gitleaf` program itself), in which case `gitleaf-projects`.
+fn pick_root(docs: &std::path::Path) -> PathBuf {
     let legacy = docs.join("Codex").join("Overleaf");
     if legacy.is_dir() {
-        legacy
-    } else {
-        docs.join("gitleaf")
+        return legacy;
     }
+    let preferred = docs.join("gitleaf");
+    if preferred.is_dir() || !preferred.exists() {
+        preferred
+    } else {
+        docs.join("gitleaf-projects")
+    }
+}
+
+/// Create a folder gitleaf needs, with an error message a non-programmer can act on.
+fn ensure_dir(path: &std::path::Path, what: &str, flag: &str) -> anyhow::Result<()> {
+    if path.exists() && !path.is_dir() {
+        anyhow::bail!(
+            "the {what} {} already exists as a file, not a folder.\nMove or rename that file, or start gitleaf with {flag} pointing to another folder.",
+            path.display()
+        );
+    }
+    std::fs::create_dir_all(path)
+        .map_err(|e| anyhow::anyhow!("could not create the {what} {}: {e}", path.display()))
 }
 
 fn default_cache() -> PathBuf {
@@ -149,8 +171,8 @@ async fn main() -> anyhow::Result<()> {
     if port == 0 {
         anyhow::bail!("port must be between 1 and 65535");
     }
-    std::fs::create_dir_all(&root)?;
-    std::fs::create_dir_all(&cache)?;
+    ensure_dir(&root, "projects folder", "--root")?;
+    ensure_dir(&cache, "cache folder", "--cache")?;
     let state = AppState {
         port,
         update: Default::default(),
@@ -314,4 +336,39 @@ fn router(state: AppState) -> Router {
             security::protect,
         ))
         .with_state(state)
+}
+
+#[cfg(test)]
+mod startup_tests {
+    use super::*;
+
+    fn scratch(name: &str) -> PathBuf {
+        let d = std::env::temp_dir().join(format!("gitleaf-startup-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        std::fs::create_dir_all(&d).unwrap();
+        d
+    }
+
+    #[test]
+    fn default_root_avoids_a_downloaded_binary_named_gitleaf() {
+        let docs = scratch("binary");
+        assert_eq!(pick_root(&docs), docs.join("gitleaf"), "fresh machine uses ~/Documents/gitleaf");
+        std::fs::write(docs.join("gitleaf"), b"\x7fELF binary").unwrap();
+        assert_eq!(pick_root(&docs), docs.join("gitleaf-projects"), "a file named gitleaf is left alone");
+        std::fs::remove_file(docs.join("gitleaf")).unwrap();
+        std::fs::create_dir_all(docs.join("gitleaf")).unwrap();
+        assert_eq!(pick_root(&docs), docs.join("gitleaf"), "an existing projects folder keeps being used");
+        std::fs::create_dir_all(docs.join("Codex/Overleaf")).unwrap();
+        assert_eq!(pick_root(&docs), docs.join("Codex/Overleaf"), "legacy folder wins");
+    }
+
+    #[test]
+    fn ensure_dir_explains_a_file_in_the_way() {
+        let d = scratch("ensure");
+        let f = d.join("gitleaf");
+        std::fs::write(&f, b"x").unwrap();
+        let err = ensure_dir(&f, "projects folder", "--root").unwrap_err().to_string();
+        assert!(err.contains("already exists as a file") && err.contains("--root"), "{err}");
+        assert!(ensure_dir(&d.join("new/nested"), "cache folder", "--cache").is_ok());
+    }
 }
