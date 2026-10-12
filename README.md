@@ -17,83 +17,278 @@
   <img src="docs/screenshot.jpg" width="820" alt="gitleaf: file explorer, LaTeX editor with tabs, and PDF preview side by side">
 </p>
 
-## Download
+## Get started
 
-One file, no installer. Pick your computer below, paste the command into a terminal, and gitleaf starts
-and opens in your browser. The terminal route skips the operating system's "unidentified developer" prompt;
-the buttons download the same file if you prefer clicking (then see the note under each one).
+**Install Git → start GitLeaf → create a paper → Compile.** GitLeaf runs on your computer and
+opens in your browser. **No LaTeX installation is needed to get started:** if a compiler is
+missing, your first Compile offers to install Tectonic for you. You can also use a
+[full LaTeX installation](#latex-compiler-options) such as MacTeX or TeX Live. You do not need a
+GitHub account to write a paper, and the release download does not require Rust, Node.js or a
+separate web server.
 
-### Mac with Apple silicon (M1, M2, M3, M4 — Macs from 2020 on)
+[Setup](#1-install-git-once) · [Your first paper](#3-create-your-first-paper) ·
+[LaTeX options](#latex-compiler-options) · [Troubleshooting](#troubleshooting) · [Build from source](#build-from-source)
 
-<a href="https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-arm64"><img src="https://img.shields.io/badge/Download-macOS%20Apple%20silicon-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Download gitleaf for Mac with Apple silicon"></a>
+### 1. Install Git (once)
+
+Open **Terminal** on macOS/Linux or **PowerShell** on Windows, then check:
+
+```sh
+git --version
+```
+
+If you see a version number, Git is ready. If Git is missing:
+
+| Computer | Install Git |
+|---|---|
+| macOS | Run `xcode-select --install`, finish the installer, then reopen Terminal. If you already use Homebrew, `brew install git` is another option. [Git for macOS](https://git-scm.com/install/mac) |
+| Windows | Install [Git for Windows](https://git-scm.com/install/windows) with its default options, then reopen PowerShell. |
+| Ubuntu / Debian | Run `sudo apt update` followed by `sudo apt install git curl tar`. |
+| Other Linux | Follow [Git's Linux instructions](https://git-scm.com/install/linux); also make sure `curl` and `tar` are installed. |
+
+GitLeaf uses Git to keep each paper's history. Before creating your first project, set your name
+and email below, replacing both examples with your own details. Skip this if your Git identity is
+already configured. These settings apply to all your Git repositories on this computer; they are
+an author label, not a login.
+
+```sh
+git config --global user.name "Your Name"
+git config --global user.email "you@example.com"
+```
+
+### 2. Download and start GitLeaf
+
+Choose **one** download for your computer. Each is a single executable file, with no installer.
+Use a current desktop browser. Internet access is needed for downloading GitLeaf and, if you do
+not already have LaTeX, downloading the compiler and its packages on your first compile.
+
+| Computer | Download |
+|---|---|
+| Mac with Apple silicon | [gitleaf-macos-arm64](https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-arm64) |
+| Mac with an Intel processor | [gitleaf-macos-x86_64](https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-x86_64) |
+| Windows (x64) | [gitleaf-windows-x86_64.exe](https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-windows-x86_64.exe) |
+| Linux (x86_64, most PCs) | [gitleaf-linux-x86_64](https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-linux-x86_64) |
+| Linux (ARM64, e.g. a Raspberry Pi with a 64-bit OS) | [gitleaf-linux-arm64](https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-linux-arm64) |
+
+Not sure which Mac you have? **Apple menu → About This Mac**: “Chip: Apple M…” means Apple silicon;
+“Processor: Intel” means Intel. On Linux, `uname -m` reports `x86_64` or `aarch64` (ARM64).
+
+**Windows:** Download the `.exe` and double-click it. Keep the console window open while using
+GitLeaf. If Windows SmartScreen asks, choose **More info → Run anyway** only for the file you
+intended to download from this repository. You can move the executable to a permanent folder and
+make a desktop shortcut to reopen it later.
+
+**macOS / Linux:** The easiest terminal route downloads the right file, makes it executable and
+starts it. Expand your computer's instructions below and paste the complete command into Terminal.
+The file is kept in a dedicated folder so you can find it again.
+
+<details>
+<summary>Mac with Apple silicon</summary>
 
 ```bash
-cd ~/Downloads && curl -L -o gitleaf https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-arm64 && chmod +x gitleaf && ./gitleaf
+mkdir -p "$HOME/Applications/gitleaf" &&
+cd "$HOME/Applications/gitleaf" &&
+curl --fail --location --output gitleaf https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-arm64 &&
+chmod +x gitleaf &&
+./gitleaf
 ```
 
-Not sure which Mac you have? Apple menu → About This Mac: "Chip: Apple M…" means this row; "Processor: Intel" means the next one.
+</details>
 
-### Older Mac (Intel)
-
-<a href="https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-x86_64"><img src="https://img.shields.io/badge/Download-macOS%20Intel-555555?style=for-the-badge&logo=apple&logoColor=white" alt="Download gitleaf for Intel Mac"></a>
+<details>
+<summary>Mac with Intel</summary>
 
 ```bash
-cd ~/Downloads && curl -L -o gitleaf https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-x86_64 && chmod +x gitleaf && ./gitleaf
+mkdir -p "$HOME/Applications/gitleaf" &&
+cd "$HOME/Applications/gitleaf" &&
+curl --fail --location --output gitleaf https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-x86_64 &&
+chmod +x gitleaf &&
+./gitleaf
 ```
 
-If you clicked a button instead, macOS blocks the file once because it is not notarized. Run this in the
-Downloads folder, then it opens normally every time:
+</details>
+
+<details>
+<summary>Linux (x86_64)</summary>
 
 ```bash
-cd ~/Downloads && xattr -d com.apple.quarantine gitleaf-macos-* && chmod +x gitleaf-macos-* && ./gitleaf-macos-*
+mkdir -p "$HOME/.local/bin/gitleaf-app" &&
+cd "$HOME/.local/bin/gitleaf-app" &&
+curl --fail --location --output gitleaf https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-linux-x86_64 &&
+chmod +x gitleaf &&
+./gitleaf
 ```
 
-### Windows
+</details>
 
-<a href="https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-windows-x86_64.exe"><img src="https://img.shields.io/badge/Download-Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Download gitleaf for Windows"></a>
-
-Double-click `gitleaf-windows-x86_64.exe`. If SmartScreen appears, click "More info" → "Run anyway" (once).
-Or in PowerShell:
-
-```powershell
-Invoke-WebRequest https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-windows-x86_64.exe -OutFile gitleaf.exe; .\gitleaf.exe
-```
-
-### Linux
-
-<a href="https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-linux-x86_64"><img src="https://img.shields.io/badge/Download-Linux%20x86__64-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Download gitleaf for Linux x86_64"></a>
-<a href="https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-linux-arm64"><img src="https://img.shields.io/badge/Download-Linux%20ARM64-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Download gitleaf for Linux ARM64"></a>
+<details>
+<summary>Linux (ARM64)</summary>
 
 ```bash
-cd ~/Downloads && curl -L -o gitleaf https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-linux-x86_64 && chmod +x gitleaf && ./gitleaf
+mkdir -p "$HOME/.local/bin/gitleaf-app" &&
+cd "$HOME/.local/bin/gitleaf-app" &&
+curl --fail --location --output gitleaf https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-linux-arm64 &&
+chmod +x gitleaf &&
+./gitleaf
 ```
 
-On a Raspberry Pi or other ARM machine use `gitleaf-linux-arm64` in that command.
+</details>
 
-To start it again later, run `~/Downloads/gitleaf` (or move the file somewhere permanent, such as `~/bin`, and run
-it from there). Your papers live in `~/Documents/gitleaf`; later versions update themselves from inside the app.
+<details>
+<summary>macOS / Linux: I downloaded with my browser instead</summary>
 
-**Requirements:** `git` (Git for Windows on Windows). A LaTeX installation is optional: when none is found, the
-first Compile offers to download a checksum-verified [Tectonic](https://tectonic-typesetting.github.io/), a self-contained engine that
-fetches packages on demand. The editor, PDF worker, math renderer, fonts and PDF decoder assets are bundled into the
-binary. Opening and editing projects needs no browser internet access. Git remotes, template
-browsing, engine downloads and uncached Tectonic packages still need a network connection. All checksums are in `SHA256SUMS.txt` on the release page.
+Open Terminal and go to the folder containing the download (usually `~/Downloads`). On a Mac
+with Apple silicon, run:
 
-Running it a second time opens the browser only after verifying that the running service is GitLeaf
-with the same root and cache. An occupied port belonging to another service is reported as an error. Options:
-
-```
-gitleaf [--root DIR] [--cache DIR] [--port N] [--no-open]
+```bash
+cd "$HOME/Downloads" &&
+chmod +x gitleaf-macos-arm64 &&
+./gitleaf-macos-arm64
 ```
 
-| Variable / flag | Default | Meaning |
-|-----------------|---------|---------|
-| `GITLEAF_ROOT`, `--root` | `~/Documents/gitleaf` | Folder holding one git repository per paper; existing `~/Documents/Codex/Overleaf` is used for compatibility |
-| `GITLEAF_CACHE`, `--cache` | OS cache folder | Compile outputs and the downloaded Tectonic |
-| `GITLEAF_PORT`, `--port` | `8077` | Listen port, on 127.0.0.1 only |
-| `GITLEAF_ENGINE` | auto | `latexmk` or `tectonic` |
-| `GITLEAF_NO_OPEN`, `--no-open` | | Do not open the browser on start |
-| `GITLEAF_NO_UPDATE_CHECK` | unset | Disable automatic GitHub release checks; manual checks remain available |
+For an Intel Mac or Linux, replace **both** instances of `gitleaf-macos-arm64` with the exact file
+name from the download table. Run only the file for your computer.
+
+GitLeaf is not yet signed or notarized. If macOS blocks opening it, first try the command above,
+then follow **System Settings → Privacy & Security → Open Anyway** and run it again. Apple's
+[opening instructions](https://support.apple.com/en-us/102445) explain the prompt. Approve only
+the download you trust; managed computers may require your administrator's help.
+
+</details>
+
+**You are ready when your browser opens GitLeaf.** If it does not open automatically, visit
+[http://127.0.0.1:8077](http://127.0.0.1:8077). Keep the terminal/console window open: it runs the
+app even though you edit in the browser. For a download error, use the
+[latest release page](https://github.com/kmarkiv/gitleaf/releases/latest) and download an executable
+under **Assets**, rather than the “Source code” ZIP. Release checksums are in `SHA256SUMS.txt` there.
+
+### 3. Create your first paper
+
+1. Click **＋ New**. On a fresh installation, the New project dialog opens automatically.
+2. In **Built-in templates**, select **Article (plain)**, enter a name such as `my-first-paper`,
+   and click **Create**. Leave **Push to (optional)** blank to work locally.
+3. Open `main.tex` in the file explorer if it is not already open. Change the title or a sentence
+   in the editor. Wait for **Saved**; edits save automatically after you stop typing.
+4. Click the green **Compile** button. If no LaTeX compiler is installed, accept the prompt to
+   download **Tectonic**. The first compile can take longer while it downloads packages.
+5. When compilation succeeds, your PDF appears on the right. Use the PDF download button to save
+   a copy. If compilation fails, click an error in **Problems** to jump to its source line.
+
+Already have a paper? Use **＋ New → Zip** to import a source ZIP, or **Git / Overleaf project** to
+clone a repository. A source ZIP from Overleaf is a simple way to start without Git credentials.
+Private repositories need credentials configured in your terminal before GitLeaf can clone them.
+
+An existing `latexmk` or Tectonic installation is detected automatically. Automatic Tectonic
+installation also needs `curl` and `tar` on your system. If installation fails, install
+[Tectonic](https://tectonic-typesetting.github.io/) manually, make it available on PATH, and restart
+GitLeaf. See [Troubleshooting](#troubleshooting) for common setup problems.
+
+## LaTeX compiler options
+
+**Choose either option.** GitLeaf works with Tectonic or a full LaTeX installation. If you already
+have LaTeX, you do not need to install another copy.
+
+| Option | Choose it when | Setup |
+|---|---|---|
+| **Tectonic — quick start** | You want to start writing with minimal setup. Packages download as needed and are cached for later use. | Click **Compile** and accept the download prompt if no compiler is found. |
+| **Full LaTeX — MacTeX / TeX Live** | You want a broad collection of packages and tools installed upfront, including for offline work. | Install the distribution for your computer below, then restart GitLeaf. |
+
+### Install full LaTeX (optional)
+
+A full installation uses several gigabytes and can take a while to download. It is a separate
+system installation that you manage through its installer or package manager.
+
+| Computer | Installation |
+|---|---|
+| macOS | Download and run the full [MacTeX installer](https://tug.org/mactex/mactex-download.html). MacTeX includes TeX Live; choose the full distribution for this route. |
+| Windows | Download and run the [TeX Live Windows installer](https://tug.org/texlive/windows.html), keeping the default **full** installation scheme and the option to add its programs to PATH. |
+| Ubuntu / Debian | Run the commands below to install the full distribution and `latexmk`. See the [Ubuntu](https://packages.ubuntu.com/noble/texlive-full) or [Debian](https://packages.debian.org/stable/texlive-full) package information. |
+| Other Linux | Follow the [TeX Live installation guide](https://tug.org/texlive/quickinstall.html), choose the **full** scheme, and add the binary directory to PATH as instructed by the installer. |
+
+Ubuntu / Debian:
+
+```bash
+sudo apt update &&
+sudo apt install texlive-full latexmk
+```
+
+After installation, close and reopen Terminal or PowerShell, then check:
+
+```sh
+latexmk -v
+pdflatex --version
+```
+
+Both commands should print version information. `latexmk` is the build tool GitLeaf uses with a
+full distribution; having only `pdflatex` installed is not enough for automatic detection.
+Stop the running GitLeaf with **Ctrl+C**, then start it again from the new terminal so it sees
+the updated PATH. Click **Compile**; GitLeaf automatically prefers `latexmk` when it is available,
+otherwise it uses Tectonic. An explicitly set `GITLEAF_ENGINE` overrides this choice.
+
+If MacTeX is installed but the commands are missing, check that `/Library/TeX/texbin` is on PATH.
+For Windows or Linux, use the binary directory shown by your installer. A full distribution
+lets you compile with its installed packages offline; remote Git operations still need internet.
+
+GitLeaf's current full-LaTeX build uses **pdfLaTeX** through `latexmk`, with shell escape and
+custom `latexmkrc` files disabled. Installing the full distribution does not enable XeLaTeX,
+LuaLaTeX or custom shell-based build steps in the app; those workflows need a separately managed
+terminal build.
+
+## Using GitLeaf again
+
+**Start:** On Windows, double-click the same executable. If you used the terminal setup above,
+run the matching command below; no download is needed:
+
+| Computer | Reopen in Terminal |
+|---|---|
+| macOS | `"$HOME/Applications/gitleaf/gitleaf"` |
+| Linux | `"$HOME/.local/bin/gitleaf-app/gitleaf"` |
+
+If you downloaded with your browser, run the executable from wherever you saved it instead.
+Your projects appear in the project menu when the app opens. Starting GitLeaf again while it is
+already running reopens the browser after checking that it is the same GitLeaf configuration.
+
+**Stop:** Wait for **Saved**, then press **Ctrl+C** in the terminal/console that is running GitLeaf.
+Closing only the browser tab leaves the app running. Restart it when you want to continue writing.
+
+**Find your papers:** By default they are in `Documents/gitleaf` in your home folder, with one
+folder per project. The terminal prints the actual projects folder at startup. If
+`Documents/Codex/Overleaf` already exists, GitLeaf uses that folder for compatibility. If
+`Documents/gitleaf` is occupied by a file, it uses `Documents/gitleaf-projects` instead. Moving
+the GitLeaf executable does not move your papers.
+
+**Keep a history:** Autosave writes your files to disk. **Git → Commit** records a version you can
+return to; **Git → Push** sends committed changes to a configured remote. A remote is optional.
+Back up the projects folder, including its hidden `.git` folders.
+
+**Work offline:** The editor and PDF viewer are included in the executable. Git remotes, template
+browsing, engine downloads and uncached Tectonic packages need a network connection. Compile a
+paper successfully online before relying on its cached packages offline.
+
+## Updates
+
+Open **View → Check for updates**. Published release binaries offer an **Update** button when a
+newer compatible release is available. GitLeaf saves pending edits, verifies the download, then
+restarts. Keep the executable in a folder your account can write to. Your papers stay in the
+projects folder.
+
+Automatic checks run on startup and every six hours. Set `GITLEAF_NO_UPDATE_CHECK=1` to disable
+them for offline or restricted environments; manual checks still work. A failed check does not
+block editing. You can also download a newer executable from the release page, stop the running
+app, and replace the old executable.
+
+**Built from source?** Stop GitLeaf, then run these commands in your clone and start it again.
+On Windows, replace the last command with `.\target\release\gitleaf.exe`:
+
+```bash
+git pull
+npm ci
+npm run build
+cargo build --release --locked
+./target/release/gitleaf
+```
+
+Commit or save any local source changes before pulling.
 
 ## What it does
 
@@ -122,17 +317,69 @@ gitleaf [--root DIR] [--cache DIR] [--port N] [--no-open]
 
 ### Importing from Overleaf
 
-Overleaf only hands out template sources to logged-in users, so the gallery tab guides you: pick a template,
-press Import to open it in Overleaf, press *Open as Template* there, come back, and the new project's address
-is picked up from the clipboard; press Import again and gitleaf clones it over `git.overleaf.com`. Pull and
-Push then keep it in sync with Overleaf. Existing projects: paste their link into the *Git / Overleaf project*
-tab. The git bridge needs your Overleaf git token once; git remembers it.
+For an existing Overleaf paper, download its source ZIP in Overleaf, then use **＋ New → Zip**.
+This creates a local copy; it does not sync changes back to Overleaf.
+
+For Git-based syncing, paste the project link into **＋ New → Git / Overleaf project** and clone it.
+Set up access to Overleaf's Git bridge in your terminal first; GitLeaf uses your existing Git
+credentials and cannot answer interactive login prompts. Pull and Push then keep the repositories
+in sync when your Overleaf account supports Git access.
+
+The **Overleaf gallery** searches for a template's source repository on GitHub first. When a
+source is unavailable, it guides you through opening the template in Overleaf and importing the
+resulting project link or source ZIP.
+
+## Troubleshooting
+
+| Symptom | Action |
+|---|---|
+| Git is missing / command not found | Follow [Install Git](#1-install-git-once), reopen your terminal, then confirm `git --version` works. |
+| Project creation fails at initial commit | Set your Git name and email using [step 1](#1-install-git-once), then retry with a new project name if the previous folder already exists. |
+| Port is occupied | Stop the other service or choose `--port 8078`. An existing GitLeaf with different root/cache also requires another port. |
+| Browser did not open / cannot connect | Keep the GitLeaf terminal open and use the localhost address it prints (normally `http://127.0.0.1:8077`). Check the terminal for a startup error. |
+| macOS blocks opening the download | See the browser-download instructions in [step 2](#2-download-and-start-gitleaf) and Apple's [opening instructions](https://support.apple.com/en-us/102445). |
+| Permission denied when starting on macOS/Linux | Run `chmod +x` on the exact downloaded file, then start it with `./` followed by its name. |
+| Download says 404 / fails | Open the [latest release page](https://github.com/kmarkiv/gitleaf/releases/latest) and choose the executable for your computer under Assets. |
+| No LaTeX engine / engine download fails | Accept the Compile prompt while online, or follow [full LaTeX setup](#install-full-latex-optional). For automatic Tectonic installation, check `curl --version` and `tar --version`. Restart GitLeaf after changing PATH. |
+| Full LaTeX is installed but not detected | In a new terminal, check `latexmk -v` and `pdflatex --version`. Add the distribution's binary directory to PATH if needed, then restart GitLeaf from that terminal. |
+| First compile takes a while | Tectonic may be downloading packages. Keep GitLeaf running and check Logs for progress. Subsequent compiles reuse cached packages. |
+| Clone, Pull or Push needs a login | Set up Git credentials for the same remote in your terminal, then retry in GitLeaf. A source ZIP avoids credentials when you only need a local copy. |
+| Compilation fails | Use Problems and Logs; the previous successful PDF remains available. Compile again after fixing the source. |
+| Editor says Save failed | Keep the tab open. Check disk space, file permissions and the server process, then use Save again. |
+| Browser requests return 403 | Use the direct `http://127.0.0.1:PORT` or `http://localhost:PORT` address, with the configured port. |
+| Assets missing during Rust build | Run `npm ci` and `npm run build` first. |
+
+## Configuration (optional)
+
+The defaults work for a first paper. Use these settings only if you want another projects folder,
+port or compiler. On macOS/Linux, run `./gitleaf` from its folder; on Windows, use
+`.\gitleaf-windows-x86_64.exe` instead. For example, `./gitleaf --port 8078` opens on port 8078.
+
+```
+gitleaf [--root DIR] [--cache DIR] [--port N] [--no-open]
+```
+
+| Variable / flag | Default | Meaning |
+|-----------------|---------|---------|
+| `GITLEAF_ROOT`, `--root` | `~/Documents/gitleaf` | Folder holding one git repository per paper; existing `~/Documents/Codex/Overleaf` is used for compatibility; falls back to `~/Documents/gitleaf-projects` when `gitleaf` is a file |
+| `GITLEAF_CACHE`, `--cache` | OS cache folder | Compile outputs and the downloaded Tectonic |
+| `GITLEAF_PORT`, `--port` | `8077` | Listen port, on 127.0.0.1 only |
+| `GITLEAF_ENGINE` | auto | `latexmk` or `tectonic` |
+| `GITLEAF_NO_OPEN`, `--no-open` | | Do not open the browser on start |
+| `GITLEAF_NO_UPDATE_CHECK` | unset | Disable automatic GitHub release checks; manual checks remain available |
 
 ## Build from source
 
-Requires a current stable Rust toolchain, Node.js 22.13 or newer (Node 24 is used in CI), npm and Git.
+Use this route if you want to edit GitLeaf or run source changes that have not been released yet.
+For everyday use, follow [Get started](#get-started) above.
+
+Install a current stable [Rust toolchain](https://www.rust-lang.org/tools/install),
+[Node.js](https://nodejs.org/en/download) 22.13 or newer (Node 24 is used in CI), npm and Git.
+The Node.js installer includes npm. Reopen your terminal and check `cargo --version`,
+`node --version`, `npm --version` and `git --version` before continuing.
 Configure your Git name and email before creating projects; GitLeaf reports a failed initial commit
-instead of silently creating an incomplete project.
+instead of silently creating an incomplete project. On Windows, replace the last command below
+with `.\target\release\gitleaf.exe`.
 
 ```bash
 git clone https://github.com/kmarkiv/gitleaf.git
@@ -190,20 +437,6 @@ both SyncTeX directions, structured errors and PDF preservation. Set `GITLEAF_RE
 to check a TeX Live installation instead. The first Tectonic run may download packages.
 Screenshots are written to `test-artifacts/` (or `GITLEAF_SCREENSHOT_DIR`).
 
-### Updates
-
-GitLeaf checks its GitHub releases on startup and every six hours. Set `GITLEAF_NO_UPDATE_CHECK=1`
-to disable automatic checks for offline or restricted environments. A failed check does not block
-editing. View → Check for updates can still perform an explicit check.
-
-Release binaries offer an Update button when a newer compatible release is published. The updater
-saves pending edits and pauses editing, downloads only from the official repository over HTTPS,
-requires the exact asset checksum from `SHA256SUMS.txt`, checks the executable's version, and then
-replaces it on the executable's own filesystem. Active HTTP work drains before a direct process
-restart; no shell command is constructed. Source builds show the release page and must be rebuilt
-with the frontend assets. The actual binary replacement/restart needs a release smoke test on each
-platform; unit tests cover version comparison, URL validation and exact checksum selection.
-
 ## Operating GitLeaf
 
 GitLeaf is a local application for one trusted user. It binds to `127.0.0.1` and has no login or
@@ -236,19 +469,6 @@ reverse-proxy deployments are not supported by this configuration.
   SHA-256 digest. Releases without a digest, checksum failures and binaries that fail `--version`
   are refused. Install Tectonic manually on PATH if automatic installation is unavailable.
 
-### Troubleshooting
-
-| Symptom | Action |
-|---|---|
-| Git is missing | Install Git and ensure it is on PATH before starting GitLeaf. |
-| Project creation fails at initial commit | Configure `git config --global user.name` and `git config --global user.email` in your terminal, then retry. |
-| Port is occupied | Stop the other service or choose `--port 8078`. An existing GitLeaf with different root/cache also requires another port. |
-| No LaTeX engine | Install TeX Live/latexmk or Tectonic; select explicitly with `GITLEAF_ENGINE=tectonic` or `latexmk`. |
-| Compilation fails | Use Problems and Logs; the previous successful PDF remains available. Compile again after fixing the source. |
-| Editor says Save failed | Keep the tab open. Check disk space, file permissions and the server process, then use Save again. |
-| Browser requests return 403 | Use the direct `http://127.0.0.1:PORT` or `http://localhost:PORT` address, with the configured port. |
-| Assets missing during Rust build | Run `npm ci` and `npm run build` first. |
-
 ## Releasing
 
 CI runs frontend tests, Rust formatting, static checks, unit/HTTP tests and release builds on Linux,
@@ -261,6 +481,11 @@ Keep `Cargo.toml`, `package.json` and their lockfiles on the same version. Tag a
 (x86_64 and ARM64) and Windows binaries with locked dependencies. It verifies version/tag agreement,
 attaches `SHA256SUMS.txt`, and creates a **draft** GitHub release for review before publication.
 The download links above point to the latest published release, not untagged source changes.
+
+The updater requires the exact asset checksum from `SHA256SUMS.txt`, validates the executable's
+version, and replaces it on the executable's own filesystem before a graceful restart. Source
+builds must be rebuilt manually. Unit tests cover version comparison, URL validation and exact
+checksum selection; actual replacement/restart needs a release smoke test on each platform.
 
 Signing/notarization and Windows code signing are not configured. Review platform smoke tests,
 artifact checksums and release notes before publishing a draft.
