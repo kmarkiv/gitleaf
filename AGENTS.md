@@ -16,3 +16,10 @@ AGENTS.md and preserve unrelated local changes.
 
 Also refresh the website after publishing a release so download links reflect
 newly available assets. Do not advertise an unpublished DMG as available.
+
+## Positioning
+
+Describe GitLeaf as a free, lightweight, offline LaTeX editor. Keep the README
+and website aligned. Explain that offline compilation needs all required tools
+and packages cached or installed; downloads and remote Git operations need
+internet.

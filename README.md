@@ -1,10 +1,16 @@
 <p align="center">
   <img src="docs/logo.svg" width="72" alt="">
 </p>
-<h1 align="center">gitleaf</h1>
+<h1 align="center">GitLeaf — Free, Lightweight, Offline LaTeX Editor</h1>
 <p align="center">
-  A small, fast Overleaf-style LaTeX editor that runs on your own machine.<br>
+  A free, lightweight, open-source LaTeX editor for Mac, Windows and Linux.<br>
+  Write locally with Git history, autosave and a side-by-side PDF preview; work offline after compiler setup.<br>
   Every paper is a plain git repository, so your work lives on GitHub, Overleaf's git bridge, or any remote you like.
+</p>
+
+<p align="center">
+  <a href="https://kmarkiv.com/gitleaf/">GitLeaf website</a> ·
+  <a href="https://kmarkiv.com/gitleaf/guide/">Setup guide</a>
 </p>
 
 <p align="center">
@@ -19,12 +25,14 @@
 
 ## Get started
 
-**Install Git → start GitLeaf → create a paper → Compile.** GitLeaf runs on your computer and
-opens in your browser. **No LaTeX installation is needed to get started:** if a compiler is
-missing, your first Compile offers to install Tectonic for you. You can also use a
+**Install Git → start GitLeaf → create a paper → Compile.** GitLeaf is a free, lightweight LaTeX
+editor that runs on your computer and opens in your browser. **No LaTeX installation is needed
+to get started:** if a compiler is missing, your first Compile offers to install Tectonic for you. You can also use a
 [full LaTeX installation](#latex-compiler-options) such as MacTeX or TeX Live. You do not need a
 GitHub account to write a paper, and the release download does not require Rust, Node.js or a
-separate web server.
+separate web server. The editor, PDF viewer, autosave and local Git commits work offline.
+Offline compilation requires a compiler and all of your paper’s packages already cached or
+installed; see [Offline LaTeX editing](#offline-latex-editing).
 
 [Setup](#1-install-git-once) · [Your first paper](#3-create-your-first-paper) ·
 [LaTeX options](#latex-compiler-options) · [Troubleshooting](#troubleshooting) · [Build from source](#build-from-source)
@@ -275,9 +283,25 @@ the GitLeaf executable does not move your papers.
 return to; **Git → Push** sends committed changes to a configured remote. A remote is optional.
 Back up the projects folder, including its hidden `.git` folders.
 
-**Work offline:** The editor and PDF viewer are included in the executable. Git remotes, template
-browsing, engine downloads and uncached Tectonic packages need a network connection. Compile a
-paper successfully online before relying on its cached packages offline.
+### Offline LaTeX editing
+
+GitLeaf’s editor and PDF viewer are bundled with the app. You can write, autosave, view an
+existing PDF and create local Git commits without an internet connection. GitLeaf is free under
+the MIT license, with no subscription or account required for local writing.
+
+**Prepare before going offline:**
+
+1. While online, download GitLeaf and install Git. Install Tectonic through the first Compile
+   prompt, or use a full LaTeX installation such as MacTeX or TeX Live with `latexmk`.
+2. Compile the paper you plan to work on, including its bibliography and figures. Tectonic
+   downloads packages as needed and caches them; a full LaTeX distribution uses installed packages.
+3. Disconnect from the internet and try compiling that paper again before relying on the setup
+   while travelling or working somewhere without a connection.
+
+Offline compilation needs every required package and tool available locally. Adding a package
+that is not cached or installed can require another download. Git Push/Pull, cloning remote
+repositories, browsing online templates, compiler downloads and update checks need internet.
+For a broad collection of packages installed upfront, see [full LaTeX options](#install-full-latex-optional).
 
 ## Updates
 
