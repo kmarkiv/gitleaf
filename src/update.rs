@@ -20,8 +20,9 @@ pub struct UpdateInfo {
     pub url: Option<String>,
     pub notes: Option<String>,
     pub asset: Option<String>,
-    /// false when running from a `cargo` build directory: update by pulling and rebuilding instead.
+    /// Bundled Mac apps and source builds update as a whole, rather than replacing one executable.
     pub can_self_update: bool,
+    pub manual_update_instructions: Option<String>,
     pub checked_at: Option<u64>,
     pub error: Option<String>,
 }
@@ -73,10 +74,25 @@ pub fn is_newer(latest: &str, current: &str) -> bool {
     }
 }
 
+fn manual_update_instructions(exe: &std::path::Path) -> Option<&'static str> {
+    let path = exe.to_string_lossy().replace('\\', "/");
+    if path.is_empty() {
+        Some("The executable could not be located. Download the new version from the release page.")
+    } else if path.to_ascii_lowercase().contains(".app/contents/macos/") {
+        Some("Download the new Mac app, quit GitLeaf using the leaf menu, and replace GitLeaf.app in Applications. Your papers stay in the projects folder.")
+    } else if path.contains("/target/") {
+        Some("This copy runs from a build directory. Update with git pull, npm ci, npm run build and cargo build --release --locked.")
+    } else {
+        None
+    }
+}
+
+fn current_manual_update_instructions() -> Option<String> {
+    manual_update_instructions(&std::env::current_exe().unwrap_or_default()).map(String::from)
+}
+
 fn can_self_update() -> bool {
-    let exe = std::env::current_exe().unwrap_or_default();
-    let s = exe.to_string_lossy();
-    !s.contains("/target/") && !s.contains("\\target\\") && !s.is_empty()
+    current_manual_update_instructions().is_none()
 }
 
 async fn curl(state: &AppState, args: &[&str]) -> Result<String, String> {
@@ -127,6 +143,7 @@ async fn fetch_latest(state: &AppState) -> UpdateInfo {
         notes: None,
         asset: None,
         can_self_update: can_self_update(),
+        manual_update_instructions: current_manual_update_instructions(),
         checked_at: std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .ok()
@@ -191,6 +208,7 @@ pub async fn check(
             notes: None,
             asset: None,
             can_self_update: can_self_update(),
+            manual_update_instructions: current_manual_update_instructions(),
             checked_at: None,
             error: Some("automatic update checks are disabled".into()),
         });
@@ -210,7 +228,11 @@ pub async fn apply(
     State(state): State<AppState>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, Json<serde_json::Value>)> {
     if !can_self_update() {
-        return Err(err(StatusCode::BAD_REQUEST, "running from a build directory: update with git pull, npm ci, npm run build and cargo build --release --locked"));
+        return Err(err(
+            StatusCode::BAD_REQUEST,
+            current_manual_update_instructions()
+                .unwrap_or_else(|| "Download the new version from the release page.".into()),
+        ));
     }
     let lock = crate::api::project_lock(&state, ".app-update").await;
     let _guard = lock.lock().await;
@@ -347,6 +369,31 @@ pub fn cleanup_after_update() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn app_bundles_update_as_a_whole_to_preserve_their_signature() {
+        for path in [
+            "/Applications/GitLeaf.app/Contents/MacOS/gitleaf",
+            "/private/tmp/App Translocation/GitLeaf.app/Contents/MacOS/gitleaf",
+        ] {
+            assert!(manual_update_instructions(std::path::Path::new(path))
+                .unwrap()
+                .contains("replace GitLeaf.app"));
+        }
+        assert!(
+            manual_update_instructions(std::path::Path::new("/repo/target/release/gitleaf"))
+                .unwrap()
+                .contains("build directory")
+        );
+        assert!(manual_update_instructions(std::path::Path::new(
+            r"C:\repo\target\release\gitleaf.exe"
+        ))
+        .unwrap()
+        .contains("build directory"));
+        assert!(
+            manual_update_instructions(std::path::Path::new("/usr/local/bin/gitleaf")).is_none()
+        );
+    }
 
     #[test]
     fn versions_compare_numerically() {

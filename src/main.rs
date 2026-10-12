@@ -352,14 +352,30 @@ mod startup_tests {
     #[test]
     fn default_root_avoids_a_downloaded_binary_named_gitleaf() {
         let docs = scratch("binary");
-        assert_eq!(pick_root(&docs), docs.join("gitleaf"), "fresh machine uses ~/Documents/gitleaf");
+        assert_eq!(
+            pick_root(&docs),
+            docs.join("gitleaf"),
+            "fresh machine uses ~/Documents/gitleaf"
+        );
         std::fs::write(docs.join("gitleaf"), b"\x7fELF binary").unwrap();
-        assert_eq!(pick_root(&docs), docs.join("gitleaf-projects"), "a file named gitleaf is left alone");
+        assert_eq!(
+            pick_root(&docs),
+            docs.join("gitleaf-projects"),
+            "a file named gitleaf is left alone"
+        );
         std::fs::remove_file(docs.join("gitleaf")).unwrap();
         std::fs::create_dir_all(docs.join("gitleaf")).unwrap();
-        assert_eq!(pick_root(&docs), docs.join("gitleaf"), "an existing projects folder keeps being used");
+        assert_eq!(
+            pick_root(&docs),
+            docs.join("gitleaf"),
+            "an existing projects folder keeps being used"
+        );
         std::fs::create_dir_all(docs.join("Codex/Overleaf")).unwrap();
-        assert_eq!(pick_root(&docs), docs.join("Codex/Overleaf"), "legacy folder wins");
+        assert_eq!(
+            pick_root(&docs),
+            docs.join("Codex/Overleaf"),
+            "legacy folder wins"
+        );
     }
 
     #[test]
@@ -367,8 +383,13 @@ mod startup_tests {
         let d = scratch("ensure");
         let f = d.join("gitleaf");
         std::fs::write(&f, b"x").unwrap();
-        let err = ensure_dir(&f, "projects folder", "--root").unwrap_err().to_string();
-        assert!(err.contains("already exists as a file") && err.contains("--root"), "{err}");
+        let err = ensure_dir(&f, "projects folder", "--root")
+            .unwrap_err()
+            .to_string();
+        assert!(
+            err.contains("already exists as a file") && err.contains("--root"),
+            "{err}"
+        );
         assert!(ensure_dir(&d.join("new/nested"), "cache folder", "--cache").is_ok());
     }
 }

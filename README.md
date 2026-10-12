@@ -58,6 +58,18 @@ git config --global user.email "you@example.com"
 
 ### 2. Download and start GitLeaf
 
+**Mac app package:** On the [release page](https://github.com/kmarkiv/gitleaf/releases/latest),
+look for `gitleaf-macos-arm64.dmg` (Apple silicon) or `gitleaf-macos-x86_64.dmg` (Intel).
+If a standalone GitLeaf is already running in Terminal, stop it with **Ctrl+C** first.
+When a DMG is available, open it, drag **GitLeaf.app** into **Applications**, eject the disk image,
+and open GitLeaf from Applications. It opens the editor in your browser without a terminal window.
+The leaf icon in the menu bar offers **Open GitLeaf in Browser**, **Show GitLeaf Log**, and **Quit GitLeaf**.
+Git still needs to be installed and configured as in step 1. For a macOS approval prompt, follow
+Apple's [opening instructions](https://support.apple.com/en-us/102445).
+
+Older releases may only include the standalone executables below. A `.app.zip` is also produced
+by the Mac packaging workflow: extract it and move GitLeaf.app into Applications.
+
 Choose **one** download for your computer. Each is a single executable file, with no installer.
 Use a current desktop browser. Internet access is needed for downloading GitLeaf and, if you do
 not already have LaTeX, downloading the compiler and its packages on your first compile.
@@ -236,7 +248,8 @@ terminal build.
 
 ## Using GitLeaf again
 
-**Start:** On Windows, double-click the same executable. If you used the terminal setup above,
+**Start:** For the Mac app, open **GitLeaf** from Applications; click its Dock or menu-bar icon
+to reopen the browser. On Windows, double-click the same executable. If you used the terminal setup above,
 run the matching command below; no download is needed:
 
 | Computer | Reopen in Terminal |
@@ -248,7 +261,8 @@ If you downloaded with your browser, run the executable from wherever you saved 
 Your projects appear in the project menu when the app opens. Starting GitLeaf again while it is
 already running reopens the browser after checking that it is the same GitLeaf configuration.
 
-**Stop:** Wait for **Saved**, then press **Ctrl+C** in the terminal/console that is running GitLeaf.
+**Stop:** Wait for **Saved**. For the Mac app, choose **Quit GitLeaf** from the leaf menu or press
+**⌘Q** while GitLeaf is active. For a standalone executable, press **Ctrl+C** in its terminal/console.
 Closing only the browser tab leaves the app running. Restart it when you want to continue writing.
 
 **Find your papers:** By default they are in `Documents/gitleaf` in your home folder, with one
@@ -269,8 +283,12 @@ paper successfully online before relying on its cached packages offline.
 
 Open **View → Check for updates**. Published release binaries offer an **Update** button when a
 newer compatible release is available. GitLeaf saves pending edits, verifies the download, then
-restarts. Keep the executable in a folder your account can write to. Your papers stay in the
+restarts. Keep the standalone executable in a folder your account can write to. Your papers stay in the
 projects folder.
+
+**Mac app package:** Update checks link to the release page. Download the new DMG, quit GitLeaf
+from its leaf menu, then replace GitLeaf.app in Applications. The app updates as a whole to
+preserve its bundle signature. Your projects remain in their existing folder.
 
 Automatic checks run on startup and every six hours. Set `GITLEAF_NO_UPDATE_CHECK=1` to disable
 them for offline or restricted environments; manual checks still work. A failed check does not
@@ -469,17 +487,60 @@ reverse-proxy deployments are not supported by this configuration.
   SHA-256 digest. Releases without a digest, checksum failures and binaries that fail `--version`
   are refused. Install Tectonic manually on PATH if automatic installation is unavailable.
 
+## Building a Mac package
+
+The Mac packaging script creates a Finder-launchable **GitLeaf.app**, a drag-to-Applications
+**DMG**, and an **app ZIP**. It requires macOS, Python 3 and Apple's Xcode Command Line Tools
+(`xcode-select --install`). Build the frontend and release binary first, as in
+[Build from source](#build-from-source), then run on an Apple silicon Mac:
+
+```bash
+python3 scripts/package-macos.py --binary target/release/gitleaf --arch arm64 --output dist
+```
+
+On an Intel Mac use `--arch x86_64`. The binary architecture and version must match the package.
+The generated app requires **macOS 13 or newer** and includes the editor assets and license notices.
+The native launcher finds common Homebrew and MacTeX paths, writes startup diagnostics to
+`~/Library/Logs/GitLeaf/gitleaf.log`, and shuts down its server when you quit the app. Git and a
+LaTeX compiler remain separate dependencies; first Compile can install Tectonic.
+
+Without signing credentials, packages use an **ad-hoc signature** and are **not notarized**;
+macOS may require first-launch approval. For distribution without that warning, use an Apple
+Developer ID Application identity and a configured `notarytool` keychain profile:
+
+```bash
+export MACOS_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)"
+export MACOS_NOTARY_PROFILE="gitleaf-notary"
+python3 scripts/package-macos.py --binary target/release/gitleaf --arch arm64 --output dist
+```
+
+These are examples: configure your own certificate and credentials using Apple's
+[notarization guidance](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution).
+The script signs the inner executables and bundle, notarizes and staples the app, creates the
+DMG, then signs, notarizes and staples the DMG. Signing or notarization failures stop packaging.
+The default release workflow builds ad-hoc packages; trusted signing credentials must be configured
+separately before producing a notarized release. For a local launch test, extract the app ZIP into a temporary folder, then run:
+
+```bash
+python3 tests/macos-package.py /path/to/GitLeaf.app
+```
+
+The test uses temporary projects, blocks automatic update checks, suppresses browser opening,
+and checks startup, embedded assets, existing-instance reuse, update instructions and graceful Quit.
+Both Mac architecture jobs attach the DMG and
+app ZIP alongside the existing executable, and their checksums are included in `SHA256SUMS.txt`.
+
 ## Releasing
 
 CI runs frontend tests, Rust formatting, static checks, unit/HTTP tests and release builds on Linux,
-macOS and Windows. Linux also runs browser regressions. A separate job checks RustSec advisories.
+macOS and Windows. macOS also builds and smoke-tests the native app package; Linux runs browser regressions. A separate job checks RustSec advisories.
 These workflows must pass on the release commit before shipping; local testing cannot validate all
 three operating systems.
 
 Keep `Cargo.toml`, `package.json` and their lockfiles on the same version. Tag a validated commit
 `vX.Y.Z` and push it. `.github/workflows/release.yml` builds macOS (Apple silicon and Intel), Linux
 (x86_64 and ARM64) and Windows binaries with locked dependencies. It verifies version/tag agreement,
-attaches `SHA256SUMS.txt`, and creates a **draft** GitHub release for review before publication.
+attaches `SHA256SUMS.txt`, and publishes a GitHub release. Review platform validation before pushing a release tag.
 The download links above point to the latest published release, not untagged source changes.
 
 The updater requires the exact asset checksum from `SHA256SUMS.txt`, validates the executable's
@@ -487,8 +548,9 @@ version, and replaces it on the executable's own filesystem before a graceful re
 builds must be rebuilt manually. Unit tests cover version comparison, URL validation and exact
 checksum selection; actual replacement/restart needs a release smoke test on each platform.
 
-Signing/notarization and Windows code signing are not configured. Review platform smoke tests,
-artifact checksums and release notes before publishing a draft.
+The Mac packaging script supports signing and notarization, but the default CI/release jobs do
+not have Apple credentials configured. Windows code signing is not configured. Review platform smoke tests,
+artifact checksums and release notes before tagging a release.
 
 ## Layout
 
@@ -503,6 +565,7 @@ artifact checksums and release notes before publishing a draft.
 - `static/index.html`: application markup.
 - `frontend/`: editor behavior, styles and the save coordinator.
 - `scripts/build-ui.mjs`: reproducible local browser bundling and license notices.
+- `scripts/package-macos.py` and `packaging/macos/`: Mac app launcher, icon and packaging pipeline.
 - `tests/`: JavaScript unit tests and isolated browser regressions.
 
 ## Limits

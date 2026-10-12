@@ -608,7 +608,7 @@ async function checkUpdate(force) {
 async function applyUpdate() {
   const u = state.update || await checkUpdate(true); if (!u) return;
   if (!u.update_available) { toast(u.error ? `Update check: ${u.error}` : `You are on the latest version (${u.current})`, u.error ? 'err' : 'ok', 4000); return; }
-  if (!u.can_self_update) { if (confirm(`gitleaf ${u.latest} is available. This copy runs from a build directory, so update with git pull, npm ci, npm run build and cargo build --release --locked. Open the release page?`)) window.open(u.url, '_blank', 'noopener'); return; }
+  if (!u.can_self_update) { if (confirm(`gitleaf ${u.latest} is available. ${u.manual_update_instructions || 'Download the new version from the release page.'} Open the release page?`)) window.open(u.url, '_blank', 'noopener'); return; }
   const notes = (u.notes || '').split('\n').slice(0, 12).join('\n');
   if (!confirm(`Update gitleaf ${u.current} → ${u.latest}?\n\nThe new version is downloaded, its checksum verified, and gitleaf restarts (about 10 seconds). Unsaved edits are saved first.\n\n${notes}`)) return;
   if (state.compileBusy || state.switching || state.pulling || state.updating) { toast('Wait for the current operation to finish'); return; }

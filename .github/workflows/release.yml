@@ -66,10 +66,14 @@ jobs:
           else
             cp target/${{ matrix.target }}/release/gitleaf dist/${{ matrix.asset }}
           fi
+      - name: Package macOS app and disk image
+        if: runner.os == 'macOS'
+        run: |
+          python3 scripts/package-macos.py --binary target/${{ matrix.target }}/release/gitleaf --arch "${{ matrix.target == 'aarch64-apple-darwin' && 'arm64' || 'x86_64' }}" --output dist
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.asset }}
-          path: dist/${{ matrix.asset }}
+          path: dist/*
 
   release:
     needs: build

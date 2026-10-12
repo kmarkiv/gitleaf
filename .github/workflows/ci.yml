@@ -34,6 +34,12 @@ jobs:
       - run: cargo clippy --locked --all-targets -- -D warnings
       - run: cargo test --locked
       - run: cargo build --release --locked
+      - name: Package macOS application
+        if: runner.os == 'macOS'
+        run: |
+          python3 scripts/package-macos.py --binary target/release/gitleaf --arch arm64 --output dist
+          ditto -x -k dist/gitleaf-macos-arm64.app.zip dist/app-test
+          python3 tests/macos-package.py dist/app-test/GitLeaf.app
       - run: npm audit --audit-level=high
       - name: Browser regressions (isolated test compiler)
         if: runner.os == 'Linux'

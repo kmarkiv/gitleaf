@@ -9,3 +9,6 @@ body.txt
 /test-artifacts
 /gitleaf
 /gitleaf.exe
+
+/dist
+__pycache__/

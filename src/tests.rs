@@ -249,6 +249,7 @@ async fn update_checks_use_cached_release_information() {
         notes: None,
         asset: None,
         can_self_update: false,
+        manual_update_instructions: None,
         checked_at: Some(1),
         error: None,
     });
