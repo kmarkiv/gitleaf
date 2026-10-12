@@ -19,35 +19,59 @@
 
 ## Download
 
-One file, no installer. Download, run, and your browser opens on the editor.
+One file, no installer. Pick your computer below, paste the command into a terminal, and gitleaf starts
+and opens in your browser. The terminal route skips the operating system's "unidentified developer" prompt;
+the buttons download the same file if you prefer clicking (then see the note under each one).
 
-<table align="center">
-  <tr>
-    <td align="center" width="200">
-      <a href="https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-arm64">
-        <img src="https://img.shields.io/badge/macOS-Apple%20silicon-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Download for macOS (Apple silicon)">
-      </a><br>
-      <a href="https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-x86_64"><sub>Intel Mac</sub></a>
-    </td>
-    <td align="center" width="200">
-      <a href="https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-windows-x86_64.exe">
-        <img src="https://img.shields.io/badge/Windows-x86__64-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows">
-      </a>
-    </td>
-    <td align="center" width="200">
-      <a href="https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-linux-x86_64">
-        <img src="https://img.shields.io/badge/Linux-x86__64-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Download for Linux">
-      </a><br>
-      <a href="https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-linux-arm64"><sub>ARM64</sub></a>
-    </td>
-  </tr>
-</table>
+### Mac with Apple silicon (M1, M2, M3, M4 — Macs from 2020 on)
 
-| Platform | First run |
-|----------|-----------|
-| macOS | `chmod +x gitleaf-macos-arm64 && xattr -d com.apple.quarantine gitleaf-macos-arm64 && ./gitleaf-macos-arm64` <br> The `xattr` step is needed once because the binary is not notarized; or right-click the file, choose Open, and confirm. |
-| Windows | Double-click `gitleaf-windows-x86_64.exe`, or run it from a terminal. SmartScreen may ask once; choose "Run anyway". |
-| Linux | `chmod +x gitleaf-linux-x86_64 && ./gitleaf-linux-x86_64` |
+<a href="https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-arm64"><img src="https://img.shields.io/badge/Download-macOS%20Apple%20silicon-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Download gitleaf for Mac with Apple silicon"></a>
+
+```bash
+curl -L -o gitleaf https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-arm64 && chmod +x gitleaf && ./gitleaf
+```
+
+Not sure which Mac you have? Apple menu → About This Mac: "Chip: Apple M…" means this row; "Processor: Intel" means the next one.
+
+### Older Mac (Intel)
+
+<a href="https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-x86_64"><img src="https://img.shields.io/badge/Download-macOS%20Intel-555555?style=for-the-badge&logo=apple&logoColor=white" alt="Download gitleaf for Intel Mac"></a>
+
+```bash
+curl -L -o gitleaf https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-x86_64 && chmod +x gitleaf && ./gitleaf
+```
+
+If you clicked a button instead, macOS blocks the file once because it is not notarized. Run this in the
+Downloads folder, then it opens normally every time:
+
+```bash
+cd ~/Downloads && xattr -d com.apple.quarantine gitleaf-macos-* && chmod +x gitleaf-macos-* && ./gitleaf-macos-*
+```
+
+### Windows
+
+<a href="https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-windows-x86_64.exe"><img src="https://img.shields.io/badge/Download-Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Download gitleaf for Windows"></a>
+
+Double-click `gitleaf-windows-x86_64.exe`. If SmartScreen appears, click "More info" → "Run anyway" (once).
+Or in PowerShell:
+
+```powershell
+Invoke-WebRequest https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-windows-x86_64.exe -OutFile gitleaf.exe; .\gitleaf.exe
+```
+
+### Linux
+
+<a href="https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-linux-x86_64"><img src="https://img.shields.io/badge/Download-Linux%20x86__64-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Download gitleaf for Linux x86_64"></a>
+<a href="https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-linux-arm64"><img src="https://img.shields.io/badge/Download-Linux%20ARM64-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Download gitleaf for Linux ARM64"></a>
+
+```bash
+curl -L -o gitleaf https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-linux-x86_64 && chmod +x gitleaf && ./gitleaf
+```
+
+On a Raspberry Pi or other ARM machine use `gitleaf-linux-arm64` in that command.
+
+Keep the `gitleaf` file wherever you like (for example `~/bin`); later versions update themselves from inside
+the app.
 
 **Requirements:** `git` (Git for Windows on Windows). A LaTeX installation is optional: when none is found, the
 first Compile offers to download a checksum-verified [Tectonic](https://tectonic-typesetting.github.io/), a self-contained engine that
