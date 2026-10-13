@@ -3,7 +3,7 @@
 </p>
 <h1 align="center">GitLeaf — Free, Lightweight, Offline LaTeX Editor</h1>
 <p align="center">
-  A free, open-source LaTeX editor for Mac, Windows and Linux that runs on your own computer.<br>
+  A free, lightweight, open-source LaTeX editor for Mac, Windows and Linux that runs on your own computer.<br>
   Write with autosave and a side-by-side PDF preview, keep every paper's history in Git, and work offline after setup.
 </p>
 
@@ -25,13 +25,13 @@
 
 ## Get started
 
-**Install Git → start GitLeaf → create a paper → Compile.** That is the whole setup.
+**Install Git → start GitLeaf → create a paper → Compile.** Follow the three steps below to write your first paper.
 
 - **No LaTeX installation needed to begin.** If no compiler is found, your first Compile offers to
   install Tectonic. A [full LaTeX installation](#latex-compiler-options) such as MacTeX or TeX Live also works.
 - **No account needed.** Papers stay on your computer; GitHub or another Git remote is optional.
-- **One file, no installer.** GitLeaf runs locally and opens in your browser. You do not need Rust,
-  Node.js or a web server.
+- **Simple download.** Use the Mac app on macOS, or a standalone executable on Windows or Linux.
+  GitLeaf runs locally and opens in your browser; no Rust, Node.js or separate web server is needed.
 - **Works offline** for editing, autosave, the PDF viewer and local commits. Compiling offline needs your
   compiler and packages installed or cached first; see [Offline LaTeX editing](#offline-latex-editing).
 
@@ -57,7 +57,7 @@ A version number means Git is ready. Otherwise install it:
 | Other Linux | Follow [Git's Linux instructions](https://git-scm.com/install/linux); also install `curl` and `tar`. |
 
 Then tell Git who you are, once per computer. Replace both examples with your own details; this
-labels your saved versions and is not a login. Skip it if Git already knows your name.
+labels your saved versions and is not a login. Skip it if both your Git name and email are already configured.
 
 ```sh
 git config --global user.name "Your Name"
@@ -71,15 +71,17 @@ git config --global user.email "you@example.com"
 - [GitLeaf for Mac with Apple silicon (.dmg)](https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-arm64.dmg)
 - [GitLeaf for older Macs with an Intel processor (.dmg)](https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-x86_64.dmg)
 
-Open the downloaded file, drag **GitLeaf** into **Applications**, and open it from Applications.
+If another copy is running, stop it first. Open the downloaded disk image, drag **GitLeaf** into
+**Applications**, eject the disk image, then open GitLeaf from Applications. The editor opens in
+your browser; the Mac app does not need a Terminal window.
 GitLeaf is not yet notarized by Apple, so **the first time** macOS says it "could not verify" the app:
 click **Done**, open **System Settings → Privacy & Security**, click **Open Anyway** next to GitLeaf,
 and confirm. After that it opens normally. GitLeaf appears as a leaf icon in the menu bar
 (**Open GitLeaf in Browser**, **Show GitLeaf Log**, **Quit GitLeaf**) and needs macOS 13 or newer.
 
-**Or use one command (Mac, Linux, Windows).** Find your computer below and paste its command into Terminal. The command downloads GitLeaf into
-its own folder, makes it runnable and starts it; your browser then opens the editor. Using Terminal
-also avoids the macOS "could not verify" warning that browser downloads get.
+**Standalone executable (all platforms).** Use this route on Windows or Linux, or if you prefer
+a Terminal launch on macOS. Paste your computer’s command into Terminal (PowerShell on Windows).
+It downloads GitLeaf into its own folder and starts it; your browser then opens the editor.
 
 Not sure which Mac you have? **Apple menu → About This Mac**: "Chip: Apple M…" is Apple silicon,
 "Processor: Intel" is an Intel Mac. On Linux, `uname -m` prints `x86_64` or `aarch64` (ARM64).
@@ -99,10 +101,11 @@ mkdir -p ~/Applications/gitleaf && cd ~/Applications/gitleaf && curl -fL -o gitl
 **Windows (64-bit)**
 
 Download [gitleaf-windows-x86_64.exe](https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-windows-x86_64.exe)
-and double-click it. If SmartScreen appears, choose **More info → Run anyway**. Or paste this into PowerShell:
+and double-click it. For a download from this repository, a SmartScreen prompt may offer **More info → Run anyway**.
+Or paste this into PowerShell:
 
 ```powershell
-mkdir -Force "$env:LOCALAPPDATA\gitleaf" | Out-Null; cd "$env:LOCALAPPDATA\gitleaf"; Invoke-WebRequest https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-windows-x86_64.exe -OutFile gitleaf.exe; .\gitleaf.exe
+$ErrorActionPreference = 'Stop'; mkdir -Force "$env:LOCALAPPDATA\gitleaf" | Out-Null; cd "$env:LOCALAPPDATA\gitleaf"; Invoke-WebRequest https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-windows-x86_64.exe -OutFile gitleaf.exe; .\gitleaf.exe
 ```
 
 **Linux (most PCs, x86_64)**
@@ -118,8 +121,8 @@ mkdir -p ~/.local/bin/gitleaf-app && cd ~/.local/bin/gitleaf-app && curl -fL -o 
 ```
 
 **You are ready when your browser shows GitLeaf.** If it does not open by itself, go to
-[http://127.0.0.1:8077](http://127.0.0.1:8077). Keep the Terminal or console window open while you
-write: it runs GitLeaf, and closing it stops the app.
+[http://127.0.0.1:8077](http://127.0.0.1:8077). For a standalone executable, keep its Terminal or
+console window open while you write. For the Mac app, leave GitLeaf running in the menu bar.
 
 <details>
 <summary>I downloaded the file with my browser instead (macOS / Linux)</summary>
@@ -128,12 +131,13 @@ Run this in Terminal from the folder holding the download, using the file name y
 (shown here for an Apple silicon Mac):
 
 ```bash
-cd ~/Downloads && chmod +x gitleaf-macos-arm64 && xattr -d com.apple.quarantine gitleaf-macos-arm64 2>/dev/null; ./gitleaf-macos-arm64
+cd ~/Downloads && chmod +x gitleaf-macos-arm64 && ./gitleaf-macos-arm64
 ```
 
-GitLeaf is not yet signed or notarized by Apple, so macOS blocks files downloaded in a browser once.
-The `xattr` part lifts that block; alternatively use **System Settings → Privacy & Security → Open Anyway**
-([Apple's instructions](https://support.apple.com/en-us/102445)). Linux users can leave out the `xattr` part.
+For an Intel Mac or Linux, replace both occurrences of `gitleaf-macos-arm64` with your downloaded
+file’s name. If macOS blocks the executable, follow **System Settings → Privacy & Security →
+Open Anyway** and try opening it again ([Apple’s instructions](https://support.apple.com/en-us/102445)).
+The Mac downloads are not yet notarized; Terminal downloads are not a guarantee of approval.
 
 </details>
 
@@ -173,8 +177,10 @@ A full installation takes several gigabytes.
 | Ubuntu / Debian | `sudo apt update && sudo apt install texlive-full latexmk` |
 | Other Linux | Follow the [TeX Live guide](https://tug.org/texlive/quickinstall.html), choose the full scheme, and add it to PATH. |
 
-Open a new Terminal or PowerShell and check that `latexmk -v` prints a version. Then stop GitLeaf
-(**Ctrl+C**) and start it again from that new window. GitLeaf prefers `latexmk` whenever it is
+Open a new Terminal or PowerShell and check that `latexmk -v` prints a version. Then restart
+GitLeaf: use **Quit GitLeaf** from the leaf menu for the Mac app, or **Ctrl+C** for a standalone
+executable. The Mac app finds the standard MacTeX path; restart a standalone executable from
+the new terminal so it sees the updated PATH. GitLeaf prefers `latexmk` whenever it is
 available and otherwise uses Tectonic; `GITLEAF_ENGINE` forces one or the other. On macOS, if the
 command is missing after installing MacTeX, make sure `/Library/TeX/texbin` is on PATH.
 
@@ -197,9 +203,10 @@ If GitLeaf is already running, starting it again just reopens the browser.
 **Stop:** wait for **Saved**, then choose **Quit GitLeaf** from the leaf menu (Mac app), or press
 **Ctrl+C** in the Terminal or console window. Closing the browser tab alone leaves GitLeaf running.
 
-**Find your papers:** in `Documents/gitleaf` in your home folder, one folder per paper (GitLeaf prints
-the exact path when it starts). If that name is taken by a file, it uses `Documents/gitleaf-projects`.
-Moving the GitLeaf program does not move your papers.
+**Find your papers:** normally in `Documents/gitleaf` in your home folder, one folder per paper.
+An existing `Documents/Codex/Overleaf` folder is reused for compatibility; if `Documents/gitleaf`
+is a file, GitLeaf uses `Documents/gitleaf-projects`. The startup output shows the exact path;
+in the Mac app, choose **Show GitLeaf Log** from the leaf menu. Moving the app does not move your papers.
 
 **Keep versions:** autosave writes to disk. **Git → Commit** saves a version you can return to, and
 **Git → Push** sends committed versions to a remote, if you set one up. Back up the projects folder,
@@ -214,19 +221,22 @@ The editor, PDF viewer, autosave and local commits work without internet. To com
    needs is cached or installed.
 3. Disconnect and compile once more to confirm it works before you rely on it.
 
-Adding a package that is not yet cached needs a connection again. Push, Pull, cloning, the online
-template gallery, compiler downloads and update checks always need internet.
+Offline compilation needs every required compiler, tool and package available locally. Adding a
+package that is not cached or installed needs a connection again. Push, Pull, cloning, the online
+template gallery, compiler downloads and update checks need internet.
 
 ## Updates
 
 GitLeaf checks for a new release when it starts and every six hours. When one is available, an
-**Update** button appears in the toolbar (you can also use **⋯ → Check for updates**). One click saves
-your edits, downloads and verifies the new version, and restarts; your papers are not touched. Keep
-the GitLeaf file in a folder you can write to, such as the ones used above.
+**Update** button appears in the toolbar (you can also use **⋯ → Check for updates**).
 
-The Mac app from a `.dmg` updates by downloading the new disk image and replacing GitLeaf.app.
-Set `GITLEAF_NO_UPDATE_CHECK=1` to turn off automatic checks. If you built GitLeaf from source,
-update with `git pull` and rebuild (see [Build from source](#build-from-source)).
+- **Mac app:** the button opens the release page. Download the new DMG, wait for **Saved**, quit
+  through the leaf menu, and replace GitLeaf.app in Applications. This is a manual app update.
+- **Standalone executable:** the button saves pending edits, downloads and verifies the new binary,
+  then restarts. Keep the executable in a folder you can write to.
+- **Source build:** run `git pull`, then rebuild; see [Build from source](#build-from-source).
+
+Your papers stay in the projects folder. Set `GITLEAF_NO_UPDATE_CHECK=1` to turn off automatic checks.
 
 ## What it does
 
@@ -264,10 +274,11 @@ update with `git pull` and rebuild (see [Build from source](#build-from-source))
 |---|---|
 | `git` not found | Follow [Install Git](#1-install-git-once), reopen Terminal or PowerShell, and check `git --version`. |
 | Creating a project fails at the first commit | Set your Git name and email ([step 1](#1-install-git-once)), then try again with a new project name. |
-| macOS says it "could not verify" GitLeaf | Expected the first time: click **Done**, then **System Settings → Privacy & Security → Open Anyway**. The Terminal command in [step 2](#2-download-and-start-gitleaf) avoids the prompt. |
+| macOS says it "could not verify" GitLeaf | For your intended GitLeaf download, click **Done**, then **System Settings → Privacy & Security → Open Anyway**. Follow [Apple’s instructions](https://support.apple.com/en-us/102445). |
 | "Permission denied" when starting (macOS/Linux) | Run `chmod +x` on the file, then start it with `./` and its name. |
 | Download fails or shows 404 | Open the [release page](https://github.com/kmarkiv/gitleaf/releases/latest) and pick your file under **Assets** (not "Source code"). |
-| Browser did not open | Keep GitLeaf running and open the address it prints, normally [http://127.0.0.1:8077](http://127.0.0.1:8077). |
+| Browser did not open | Keep GitLeaf running and open [http://127.0.0.1:8077](http://127.0.0.1:8077), or the configured port. In the Mac app, choose **Open GitLeaf in Browser** from the leaf menu. |
+| Mac app cannot start | Open `~/Library/Logs/GitLeaf/gitleaf.log`. If it reports an incomplete app, download a fresh official DMG and replace the app in Applications. |
 | "Port is occupied" | Another program uses port 8077. Stop it, or start GitLeaf with `--port 8078`. |
 | No LaTeX engine, or the Tectonic install fails | Accept the Compile offer while online, or install [full LaTeX](#install-full-latex-optional). Tectonic's automatic install needs `curl` and `tar`. |
 | Full LaTeX installed but not used | In a new terminal check `latexmk -v`, add LaTeX to PATH if needed, and restart GitLeaf from that terminal. |
