@@ -66,7 +66,18 @@ git config --global user.email "you@example.com"
 
 ### 2. Download and start GitLeaf
 
-Find your computer below and paste its command into Terminal. The command downloads GitLeaf into
+**On a Mac, the simplest way is the Mac app.** Download the disk image for your Mac:
+
+- [GitLeaf for Mac with Apple silicon (.dmg)](https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-arm64.dmg)
+- [GitLeaf for older Macs with an Intel processor (.dmg)](https://github.com/kmarkiv/gitleaf/releases/latest/download/gitleaf-macos-x86_64.dmg)
+
+Open the downloaded file, drag **GitLeaf** into **Applications**, and open it from Applications.
+GitLeaf is not yet notarized by Apple, so **the first time** macOS says it "could not verify" the app:
+click **Done**, open **System Settings → Privacy & Security**, click **Open Anyway** next to GitLeaf,
+and confirm. After that it opens normally. GitLeaf appears as a leaf icon in the menu bar
+(**Open GitLeaf in Browser**, **Show GitLeaf Log**, **Quit GitLeaf**) and needs macOS 13 or newer.
+
+**Or use one command (Mac, Linux, Windows).** Find your computer below and paste its command into Terminal. The command downloads GitLeaf into
 its own folder, makes it runnable and starts it; your browser then opens the editor. Using Terminal
 also avoids the macOS "could not verify" warning that browser downloads get.
 
@@ -127,8 +138,7 @@ The `xattr` part lifts that block; alternatively use **System Settings → Priva
 </details>
 
 All files, including checksums (`SHA256SUMS.txt`), are on the [release page](https://github.com/kmarkiv/gitleaf/releases/latest)
-under **Assets**. If a release also lists a Mac disk image (`.dmg`), you can install **GitLeaf.app** from it
-instead: drag it into Applications and open it from there; it runs without a Terminal window.
+under **Assets**.
 
 ### 3. Create your first paper
 
@@ -173,18 +183,19 @@ With full LaTeX, GitLeaf builds with **pdfLaTeX** through `latexmk`, with shell 
 
 ## Using GitLeaf again
 
-**Start:** run the same file again; there is nothing to download. With the commands above:
+**Start:** open it the same way again; there is nothing to download.
 
 | Computer | Start GitLeaf |
 |---|---|
-| macOS | `~/Applications/gitleaf/gitleaf` |
+| Mac app | Open **GitLeaf** from Applications (click the leaf icon in the menu bar to reopen the browser). |
+| macOS command | `~/Applications/gitleaf/gitleaf` |
 | Linux | `~/.local/bin/gitleaf-app/gitleaf` |
 | Windows | Double-click the `.exe` (from PowerShell: `& "$env:LOCALAPPDATA\gitleaf\gitleaf.exe"`) |
 
 If GitLeaf is already running, starting it again just reopens the browser.
 
-**Stop:** wait for **Saved**, then press **Ctrl+C** in the Terminal or console window. Closing the
-browser tab alone leaves GitLeaf running.
+**Stop:** wait for **Saved**, then choose **Quit GitLeaf** from the leaf menu (Mac app), or press
+**Ctrl+C** in the Terminal or console window. Closing the browser tab alone leaves GitLeaf running.
 
 **Find your papers:** in `Documents/gitleaf` in your home folder, one folder per paper (GitLeaf prints
 the exact path when it starts). If that name is taken by a file, it uses `Documents/gitleaf-projects`.
@@ -253,7 +264,7 @@ update with `git pull` and rebuild (see [Build from source](#build-from-source))
 |---|---|
 | `git` not found | Follow [Install Git](#1-install-git-once), reopen Terminal or PowerShell, and check `git --version`. |
 | Creating a project fails at the first commit | Set your Git name and email ([step 1](#1-install-git-once)), then try again with a new project name. |
-| macOS says it "could not verify" GitLeaf | Use the Terminal command in [step 2](#2-download-and-start-gitleaf), or the browser-download fix just below it. |
+| macOS says it "could not verify" GitLeaf | Expected the first time: click **Done**, then **System Settings → Privacy & Security → Open Anyway**. The Terminal command in [step 2](#2-download-and-start-gitleaf) avoids the prompt. |
 | "Permission denied" when starting (macOS/Linux) | Run `chmod +x` on the file, then start it with `./` and its name. |
 | Download fails or shows 404 | Open the [release page](https://github.com/kmarkiv/gitleaf/releases/latest) and pick your file under **Assets** (not "Source code"). |
 | Browser did not open | Keep GitLeaf running and open the address it prints, normally [http://127.0.0.1:8077](http://127.0.0.1:8077). |
