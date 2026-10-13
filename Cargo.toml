@@ -1,6 +1,6 @@
 [package]
 name = "gitleaf"
-version = "0.3.3"
+version = "0.3.4"
 edition = "2021"
 description = "Small self-hosted Overleaf-style LaTeX editor; every paper is a git repository."
 license = "MIT"
