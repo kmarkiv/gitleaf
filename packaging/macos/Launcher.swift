@@ -18,6 +18,17 @@ final class Launcher: NSObject, NSApplicationDelegate {
         Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/gitleaf-server")
     }
 
+    /// The server program, if it is present and is not this launcher. macOS file names are
+    /// case-insensitive, so a server named like the launcher would start the launcher again
+    /// and every copy would start another; refuse instead of looping.
+    private func checkedBackend() -> URL? {
+        let fm = FileManager.default
+        guard fm.isExecutableFile(atPath: backend.path) else { return nil }
+        let id = { (url: URL) in (try? url.resolvingSymlinksInPath().resourceValues(forKeys: [.fileResourceIdentifierKey]))?.fileResourceIdentifier as? NSObject }
+        if let mine = Bundle.main.executableURL, let a = id(mine), let b = id(backend), a.isEqual(b) { return nil }
+        return backend
+    }
+
     private func environment() -> [String: String] {
         var env = ProcessInfo.processInfo.environment
         // Finder's PATH omits common Git, TeX Live and Homebrew installations.
@@ -28,6 +39,8 @@ final class Launcher: NSObject, NSApplicationDelegate {
             if !paths.contains(path) { paths.append(path) }
         }
         env["PATH"] = paths.joined(separator: ":")
+        // Marks every process started by the launcher, so a stray launcher copy exits at once.
+        env["GITLEAF_LAUNCHER_CHILD"] = "1"
         return env
     }
 
@@ -85,6 +98,10 @@ final class Launcher: NSObject, NSApplicationDelegate {
             log = try FileHandle(forWritingTo: destination)
             log?.seekToEndOfFile()
             log?.write(Data("\n--- GitLeaf started \(Date()) ---\n".utf8))
+            guard let backend = checkedBackend() else {
+                showFailure("This copy of GitLeaf.app is incomplete or damaged (its local server program is missing). Download GitLeaf again from the release page.")
+                return
+            }
             let process = Process()
             process.executableURL = backend
             process.arguments = arguments
@@ -137,7 +154,7 @@ final class Launcher: NSObject, NSApplicationDelegate {
 
     @objc func openBrowser() {
         // Ask the binary to verify the localhost instance before opening the browser.
-        guard !quitting else { return }
+        guard !quitting, let backend = checkedBackend() else { return }
         let process = Process()
         process.executableURL = backend
         process.arguments = arguments.filter { $0 != "--no-open" }
@@ -177,6 +194,9 @@ final class Launcher: NSObject, NSApplicationDelegate {
         log?.closeFile()
     }
 }
+
+// A launcher started by another launcher is never wanted: leave before a Dock icon appears.
+if ProcessInfo.processInfo.environment["GITLEAF_LAUNCHER_CHILD"] != nil { exit(78) }
 
 let app = NSApplication.shared
 app.setActivationPolicy(.regular)

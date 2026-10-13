@@ -25,6 +25,11 @@ def main():
     subprocess.run(['codesign', '--verify', '--deep', '--strict', str(app)], check=True)
     binary = app / 'Contents/MacOS/gitleaf-server'
     assert subprocess.check_output([str(binary), '--version'], text=True, timeout=10).strip() == 'gitleaf ' + info['CFBundleShortVersionString']
+    # A launcher started by a launcher must exit at once, so a mis-built bundle can never
+    # multiply itself in the Dock (macOS file names are case-insensitive).
+    child = subprocess.run([str(app / 'Contents/MacOS/GitLeaf')], env=dict(os.environ, GITLEAF_LAUNCHER_CHILD='1'),
+                           timeout=10, capture_output=True)
+    assert child.returncode == 78, f'nested launcher did not refuse to start (status {child.returncode})'
     with tempfile.TemporaryDirectory(prefix='gitleaf-mac-smoke-') as directory:
         with socket.socket() as reserve:
             reserve.bind(('127.0.0.1', 0))
@@ -68,7 +73,7 @@ def main():
                 except subprocess.TimeoutExpired:
                     launcher.kill()
                     launcher.wait()
-    print('PASS: bundle signature/version/icon, native startup, offline assets, safe update instructions, existing-instance reuse and graceful Quit.')
+    print('PASS: bundle signature/version/icon, nested-launch guard, native startup, offline assets, safe update instructions, existing-instance reuse and graceful Quit.')
 
 
 if __name__ == '__main__':
