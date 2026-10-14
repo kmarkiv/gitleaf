@@ -51,7 +51,7 @@ Explicit main-file preferences in the browser still take precedence.
 
 Git and LaTeX compilation use the existing system tools and credentials. JavaScript remains responsible
 for browser editing, PDF rendering and visual-mode interaction; the Mac launcher remains native Swift.
-Source builds no longer require curl or tar for network operations or compiler installation. The
+GitLeaf v0.3.6+ does not require curl or tar for network operations or compiler installation. The
 copy-paste initial download commands in the README still use curl or PowerShell.
 
 ## Validation
@@ -158,6 +158,8 @@ Keep `Cargo.toml`, `package.json` and their lockfiles on the same version. Tag a
 `vX.Y.Z` and push it. `.github/workflows/release.yml` builds macOS (Apple silicon and Intel), Linux
 (x86_64 and ARM64) and Windows binaries with locked dependencies. It verifies version/tag agreement,
 attaches `SHA256SUMS.txt`, and publishes a GitHub release. Review platform validation before pushing a release tag.
+For human-written release notes, add `docs/releases/vX.Y.Z.md` before tagging. The release workflow
+prepends this file to its generated changelog when present.
 The download links above point to the latest published release, not untagged source changes.
 
 The updater requires the exact asset checksum from `SHA256SUMS.txt`, validates the executable's

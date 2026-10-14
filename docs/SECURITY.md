@@ -29,8 +29,8 @@ reverse-proxy deployments are not supported by this configuration.
   disables shell escape and local initialization files (`-no-shell-escape`, `-norc`). These options
   reduce risk but are not an OS sandbox. Projects requiring shell escape or custom latexmkrc behavior
   need a separately managed trusted build workflow.
-- The source build downloads and extracts Tectonic in Rust; curl and tar are not needed at runtime.
-  Published v0.3.5 uses those external tools. Official HTTPS release URLs and GitHub-provided SHA-256
+- GitLeaf v0.3.6+ downloads and extracts Tectonic in Rust; curl and tar are not needed at runtime.
+  Releases through v0.3.5 use those external tools. Official HTTPS release URLs and GitHub-provided SHA-256
   digests are still required. Downloads are streamed with a 128 MiB limit and verified before extraction;
   only the compiler executable is extracted, with link or duplicate compiler executables refused.
   Releases without a digest, checksum failures and binaries that fail `--version` are refused.

@@ -53,8 +53,8 @@ A version number means Git is ready. Otherwise install it:
 |---|---|
 | macOS | Run `xcode-select --install` and finish the installer, then reopen Terminal. ([Git for macOS](https://git-scm.com/install/mac)) |
 | Windows | Install [Git for Windows](https://git-scm.com/install/windows) with the default options, then reopen PowerShell. |
-| Ubuntu / Debian | `sudo apt update && sudo apt install git curl tar` |
-| Other Linux | Follow [Git's Linux instructions](https://git-scm.com/install/linux); also install `curl` and `tar`. |
+| Ubuntu / Debian | `sudo apt update && sudo apt install git curl` |
+| Other Linux | Follow [Git's Linux instructions](https://git-scm.com/install/linux); install `curl` if you want to use the Terminal download commands. |
 
 Then tell Git who you are, once per computer. Replace both examples with your own details; this
 labels your saved versions and is not a login. Skip it if both your Git name and email are already configured.
@@ -285,7 +285,7 @@ Your papers stay in the projects folder. Set `GITLEAF_NO_UPDATE_CHECK=1` to turn
 | Browser did not open | Keep GitLeaf running and open [http://127.0.0.1:8077](http://127.0.0.1:8077), or the configured port. In the Mac app, choose **Open GitLeaf in Browser** from the leaf menu. |
 | Mac app cannot start | Open `~/Library/Logs/GitLeaf/gitleaf.log`. If it reports an incomplete app, download a fresh official DMG and replace the app in Applications. |
 | "Port is occupied" | Another program uses port 8077. Stop it, or start GitLeaf with `--port 8078`. |
-| No LaTeX engine, or the Tectonic install fails | Accept the Compile offer while online, or install [full LaTeX](#install-full-latex-optional). The published v0.3.5 installer needs `curl` and `tar`; newer source builds handle this internally. |
+| No LaTeX engine, or the Tectonic install fails | Accept the Compile offer while online, or install [full LaTeX](#install-full-latex-optional). GitLeaf v0.3.6+ downloads and extracts Tectonic internally; older releases need `curl` and `tar`. |
 | Full LaTeX installed but not used | In a new terminal check `latexmk -v`, add LaTeX to PATH if needed, and restart GitLeaf from that terminal. |
 | First compile is slow | Tectonic is downloading packages; later compiles reuse them. Watch progress under **Logs**. |
 | Clone, Pull or Push asks for a login | Sign in to that remote with Git in your terminal first, then retry in GitLeaf. |
@@ -323,7 +323,7 @@ How GitLeaf protects your files, and its request and size limits, are described 
 
 ## Build from source
 
-The current source uses Rust for HTTP downloads, compiler archive extraction, generated-file
+GitLeaf v0.3.6 uses Rust for HTTP downloads, compiler archive extraction, generated-file
 classification and main-document detection. It reuses network connections and streams downloads
 with size limits and SHA-256 verification. Git and your LaTeX compiler remain separate tools;
 the browser handles interactive editing and PDF rendering.
