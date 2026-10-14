@@ -34,6 +34,26 @@ an assets folder at runtime. Third-party license notices are available at
 `./run.sh --no-open` builds and runs on Unix. Set `GITLEAF_REBUILD_UI=1` after changing the frontend,
 or run `npm run build` explicitly. The launcher forwards command-line options to the binary.
 
+## Rust backend and runtime dependencies
+
+Rust owns HTTP downloads, checksum verification, compiler archive extraction, generated-file
+classification and main-document selection. A shared reqwest client with Rustls reuses connections;
+release URLs and redirects require HTTPS, while user-requested ZIP imports retain HTTP/HTTPS support.
+Binary downloads stream to a temporary file with incremental SHA-256 and a 128 MiB limit; ZIP imports
+are capped at 64 MiB and text responses at 8 MiB. Failed downloads preserve the previous destination.
+
+Compiler extraction runs on a blocking worker. It reads only a regular executable from TAR.GZ or ZIP,
+rejects duplicate/link executables, and bounds file sizes and entry counts. Explorer metadata reports
+generated files and the detected main document in the existing file-list response, so opening a
+nonstandard main needs one file read rather than a browser loop of file-content probes. Main detection
+ignores commented document classes, searches shallow paths first and reads at most 64 KiB per candidate.
+Explicit main-file preferences in the browser still take precedence.
+
+Git and LaTeX compilation use the existing system tools and credentials. JavaScript remains responsible
+for browser editing, PDF rendering and visual-mode interaction; the Mac launcher remains native Swift.
+Source builds no longer require curl or tar for network operations or compiler installation. The
+copy-paste initial download commands in the README still use curl or PowerShell.
+
 ## Validation
 
 ```bash
@@ -71,6 +91,18 @@ This uses temporary projects and a temporary Tectonic package cache; it checks r
 both SyncTeX directions, structured errors and PDF preservation. Set `GITLEAF_REAL_ENGINE=latexmk`
 to check a TeX Live installation instead. The first Tectonic run may download packages.
 Screenshots are written to `test-artifacts/` (or `GITLEAF_SCREENSHOT_DIR`).
+
+For an optional live download check, run:
+
+```bash
+GITLEAF_BIN="$PWD/target/release/gitleaf" npm run test:downloads
+```
+
+This uses temporary projects and checks a real HTTPS release request, verified Tectonic installation
+and a local HTTP ZIP import. On Unix it removes curl and tar from the test server's PATH, retaining
+only Git. It requires internet and downloads a temporary official compiler; it leaves your tools,
+papers and Git settings untouched. Windows uses the normal PATH. Network tests are separate from
+the default unit suite.
 
 ## Building a Mac package
 
@@ -142,6 +174,9 @@ artifact checksums and release notes before tagging a release.
 - `src/main.rs`: configuration, router, existing-instance verification, browser launch and shutdown.
 - `src/api.rs`: projects, files, compilation, SyncTeX, Git and template discovery.
 - `src/update.rs`: cached release checks and verified, graceful self-updates.
+- `src/downloads.rs`: reusable Rust HTTP clients, bounded downloads and streaming checksums.
+- `src/engine_archive.rs`: compiler-only TAR.GZ/ZIP extraction with limits and no link unpacking.
+- `src/latex_files.rs`: generated-file classification and bounded main-document detection.
 - `src/security.rs`: localhost/origin checks and browser security headers.
 - `src/storage.rs`: durable atomic file replacement.
 - `src/assets.rs` and `build.rs`: embedded browser assets.

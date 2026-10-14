@@ -170,6 +170,7 @@ mod tests {
         presence.set_exit_when_closed(exit);
         let scratch = std::env::temp_dir();
         AppState {
+            http: crate::downloads::HttpClient::new().unwrap(),
             root: scratch.join("gitleaf-presence-root"),
             cache: scratch.join("gitleaf-presence-cache"),
             port: 8077,

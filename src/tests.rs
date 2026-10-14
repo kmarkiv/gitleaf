@@ -19,6 +19,7 @@ impl Fixture {
         let root = directory.join("projects");
         std::fs::create_dir_all(root.join("paper/.git")).unwrap();
         let state = AppState {
+            http: crate::downloads::HttpClient::new().unwrap(),
             root: root.canonicalize().unwrap(),
             cache: directory.join("cache"),
             port: 8077,
@@ -259,4 +260,43 @@ async fn update_checks_use_cached_release_information() {
     assert_eq!(status, StatusCode::OK);
     assert_eq!(body["checked_at"], 1);
     assert_eq!(body["update_available"], false);
+}
+
+#[tokio::test]
+async fn explorer_selects_a_real_main_document_without_browser_file_probes() {
+    let fixture = Fixture::new("main-hints");
+    let paper = fixture.state.root.join("paper");
+    std::fs::create_dir_all(paper.join("build")).unwrap();
+    std::fs::create_dir_all(paper.join("chapters")).unwrap();
+    std::fs::write(paper.join("a.tex"), "% \\documentclass{ignored}\nA section").unwrap();
+    std::fs::write(
+        paper.join("paper.TEX"),
+        "\\documentclass{article}\nReal document",
+    )
+    .unwrap();
+    std::fs::write(paper.join("chapters/chapter.tex"), "Chapter").unwrap();
+    std::fs::write(paper.join("build/main.tex"), "\\documentclass{generated}").unwrap();
+    let (status, files) = fixture
+        .request("GET", "/api/projects/paper/files", "")
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    let entries = files.as_array().unwrap();
+    let mains: Vec<_> = entries
+        .iter()
+        .filter(|file| file["main_candidate"] == true)
+        .collect();
+    assert_eq!(mains.len(), 1);
+    assert_eq!(mains[0]["path"], "paper.TEX");
+    assert!(entries
+        .iter()
+        .any(|file| file["path"] == "build/main.tex" && file["generated"] == true));
+    std::fs::write(paper.join("main.tex"), "Preferred filename").unwrap();
+    let (_, files) = fixture
+        .request("GET", "/api/projects/paper/files", "")
+        .await;
+    assert!(files
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|file| file["path"] == "main.tex" && file["main_candidate"] == true));
 }

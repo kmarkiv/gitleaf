@@ -6,6 +6,9 @@
 
 mod api;
 mod assets;
+mod downloads;
+mod engine_archive;
+mod latex_files;
 mod presence;
 mod security;
 mod storage;
@@ -29,6 +32,7 @@ type GalleryCache = Arc<Mutex<HashMap<String, (std::time::Instant, Vec<api::Gall
 #[derive(Clone)]
 pub struct AppState {
     pub port: u16,
+    pub http: downloads::HttpClient,
     pub update: Arc<Mutex<update::UpdateCache>>,
     pub shutdown: Arc<tokio::sync::Notify>,
     pub restart: Arc<std::sync::atomic::AtomicBool>,
@@ -178,6 +182,7 @@ async fn main() -> anyhow::Result<()> {
     ensure_dir(&root, "projects folder", "--root")?;
     ensure_dir(&cache, "cache folder", "--cache")?;
     let state = AppState {
+        http: downloads::HttpClient::new()?,
         port,
         update: Default::default(),
         shutdown: Default::default(),

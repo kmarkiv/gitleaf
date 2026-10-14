@@ -10,7 +10,8 @@
     "build": "node scripts/build-ui.mjs",
     "test": "node --test tests/*.test.mjs",
     "test:browser": "node tests/browser.mjs",
-    "test:latex": "node tests/latex.mjs"
+    "test:latex": "node tests/latex.mjs",
+    "test:downloads": "python3 tests/native-downloads.py"
   },
   "dependencies": {
     "@codemirror/language": "6.13.1",

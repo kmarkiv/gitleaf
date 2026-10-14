@@ -2,7 +2,7 @@
 // They never read or change the user's papers or Git configuration.
 import { chromium } from '@playwright/test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
+import { rename, mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { createServer } from 'node:net';
@@ -141,7 +141,20 @@ try {
 
   const response = await fetch(`${base}/api/projects/new`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:'second',template:'article'}) });
   assert.equal(response.ok,true, await response.text());
+  await rename(path.join(root, 'second/main.tex'), path.join(root, 'second/paper.tex'));
+  await writeFile(path.join(root, 'second/a.tex'), '% \\documentclass{ignored}\nA chapter, not the main document.');
+  await mkdir(path.join(root, 'second/build'));
+  await writeFile(path.join(root, 'second/build/main.tex'), '\\documentclass{generated}');
+  const fileReads = [];
+  await page.route('**/api/projects/second/file?*', async route => {
+    if (route.request().method() === 'GET') fileReads.push(new URL(route.request().url()).searchParams.get('path'));
+    await route.continue();
+  });
   await page.evaluate(() => gitleaf.openProject('second'));
+  assert.equal(await page.evaluate(() => gitleaf.state.main), 'paper.tex');
+  assert.deepEqual(fileReads, ['paper.tex']);
+  console.log('PASS: Rust main-file detection opens a nonstandard main with one file request');
+
   assert.equal(await page.evaluate(() => gitleaf.pdfv.doc === null), true);
   assert.equal(await page.locator('#pdf-download').getAttribute('href'), null);
   console.log('PASS: changing projects clears the previous PDF and download link');

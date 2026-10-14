@@ -138,7 +138,7 @@ async function openProject(name) {
   $('#projname').textContent = name; document.title = `${name} — gitleaf`;
   resetPdf(); hideProblems(); setNeedsCompile(true);
   cm.reset('', ''); renderTabs(); renderProblems(); setCompileStatus(null);
-  await loadFiles(); await guessMain();
+  await loadFiles(); guessMain();
   const main = state.files.find(f => f.path === state.main);
   if (main) await openFile(main.path);
   refreshGit(); updateSave();
@@ -154,9 +154,6 @@ function projectMenu(btn) {
 }
 
 // ------------------------------------------------------------------ files
-const GEN_EXT = new Set(['aux', 'log', 'out', 'bbl', 'blg', 'fls', 'fdb_latexmk', 'synctex', 'gz', 'toc', 'lof', 'lot', 'nav', 'snm', 'vrb', 'xdv', 'bcf', 'run.xml', 'idx', 'ind', 'ilg']);
-const GEN_DIRS = new Set(['output', 'build', 'tmp', '_minted', '.cache', 'out', 'auxil', '_to_delete']);
-function isGenerated(path) { const top = path.split('/')[0]; if (path.includes('/') && GEN_DIRS.has(top)) return true; const e = (path.split('.').pop() || '').toLowerCase(); return GEN_EXT.has(e) || path.endsWith('.synctex.gz') || path.endsWith('.run.xml'); }
 function icoFor(path) {
   const e = (path.split('.').pop() || '').toLowerCase();
   if (e === 'tex') return ['tex', 'tex']; if (e === 'bib') return ['bib', 'bib'];
@@ -198,21 +195,17 @@ function renderTree(files, box) {
 function renderFileTree() {
   const q = ($('#filter').value || '').trim().toLowerCase();
   if (q) { const hits = state.files.filter(f => f.path.toLowerCase().includes(q)); $('#files').innerHTML = hits.map(f => fileRow(f, 0, true)).join('') || '<div class="f bin" style="--depth:0">no match</div>'; $('#genfiles').innerHTML = ''; $('#gencount').textContent = ''; return; }
-  const gen = state.files.filter(f => isGenerated(f.path)), src = state.files.filter(f => !isGenerated(f.path));
+  const gen = state.files.filter(f => f.generated), src = state.files.filter(f => !f.generated);
   renderTree(src, $('#files')); renderTree(gen, $('#genfiles'));
   $('#gencount').textContent = gen.length ? `(${gen.length})` : '';
 }
 $('#filter').addEventListener('input', renderFileTree);
 $('#gen-hd').onclick = () => { const g = $('#genfiles'); g.hidden = !g.hidden; $('#gen-hd .tw').textContent = g.hidden ? '▸' : '▾'; };
 function texFiles() { return state.files.filter(f => /\.tex$/i.test(f.path)).map(f => f.path).sort((a, b) => (a.includes('/') - b.includes('/')) || a.localeCompare(b)); }
-async function guessMain() {
-  const stored = preferences.getItem('gitleaf.main.' + state.project); const texs = texFiles();
-  if (stored && texs.includes(stored)) { state.main = stored; return; }
-  if (texs.includes('main.tex')) { state.main = 'main.tex'; return; }
-  for (const p of texs.filter(p => !p.includes('/')).slice(0, 20)) {
-    try { const j = await api(`${P()}/file?path=${enc(p)}`); if (/^[^%\n]*\\documentclass/m.test(j.content)) { state.main = p; preferences.setItem('gitleaf.main.' + state.project, p); return; } } catch (e) { /* skip */ }
-  }
-  state.main = texs[0] || 'main.tex';
+function guessMain() {
+  const stored = preferences.getItem('gitleaf.main.' + state.project);
+  if (stored && texFiles().includes(stored)) { state.main = stored; return; }
+  state.main = state.files.find(f => f.main_candidate)?.path || texFiles()[0] || 'main.tex';
 }
 function setMain(path) { if (state.compileBusy || state.switching || state.pulling || state.updating) { toast('Wait for the current operation to finish'); return; } state.main = path; state.compile = null; state.problems = []; setCompileStatus(null); renderProblems(); resetPdf(); setNeedsCompile(true); preferences.setItem('gitleaf.main.' + state.project, path); renderFileTree(); toast(`Main file: ${path}`, 'ok'); showPdf(); }
 async function newFile(initial) {

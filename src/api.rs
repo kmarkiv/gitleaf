@@ -99,9 +99,8 @@ pub async fn install_engine(State(state): State<AppState>) -> ApiResult<serde_js
     }
     tokio::fs::create_dir_all(&stage).await.map_err(internal)?;
     let result = async {
-        let release = run(&stage, "curl", &["-sSfL", "-m", "30", "--proto", "=https", "--proto-redir", "=https", "-A", "gitleaf", "https://api.github.com/repos/tectonic-typesetting/tectonic/releases/latest"]).await?;
-        if !release.ok { return Err(ApiError(StatusCode::BAD_GATEWAY, release.stderr)); }
-        let json: serde_json::Value = serde_json::from_str(&release.stdout).map_err(internal)?;
+        let release = state.http.text("https://api.github.com/repos/tectonic-typesetting/tectonic/releases/latest", Duration::from_secs(30)).await.map_err(|e| ApiError(StatusCode::BAD_GATEWAY, e.to_string()))?;
+        let json: serde_json::Value = serde_json::from_str(&release).map_err(internal)?;
         let asset = json["assets"].as_array().and_then(|assets| assets.iter().find(|asset| {
             asset["name"].as_str().is_some_and(|name| name.contains(target) && (name.ends_with(".tar.gz") || name.ends_with(".zip")))
         })).ok_or_else(|| bad(format!("no Tectonic release for {target}; install it manually")))?;
@@ -111,15 +110,13 @@ pub async fn install_engine(State(state): State<AppState>) -> ApiResult<serde_js
             .filter(|s| s.len() == 64 && s.chars().all(|c| c.is_ascii_hexdigit()))
             .ok_or_else(|| bad("this release has no SHA-256 digest; install Tectonic manually instead"))?;
         let archive = stage.join("engine.archive");
-        let archive_path = archive.to_string_lossy();
-        let download = run(&stage, "curl", &["-sSfL", "-m", "240", "--proto", "=https", "--proto-redir", "=https", "--max-filesize", "134217728", "-o", &archive_path, "--", url]).await?;
-        if !download.ok { return Err(ApiError(StatusCode::BAD_GATEWAY, download.stderr)); }
-        let bytes = tokio::fs::read(&archive).await.map_err(internal)?;
-        if !digest_matches(&bytes, digest) { return Err(bad("Tectonic checksum mismatch; download refused")); }
+        let actual = state.http.download(url, &archive, Duration::from_secs(240), crate::downloads::BINARY_LIMIT).await.map_err(|e| ApiError(StatusCode::BAD_GATEWAY, e.to_string()))?;
+        if !actual.eq_ignore_ascii_case(digest) { return Err(bad("Tectonic checksum mismatch; download refused")); }
         let executable = if cfg!(windows) { "tectonic.exe" } else { "tectonic" };
-        let extracted = run(&stage, "tar", &["-xf", &archive_path, executable]).await?;
-        if !extracted.ok { return Err(internal(format!("could not extract Tectonic: {}", extracted.stderr))); }
         let candidate = stage.join(executable);
+        let is_zip = asset["name"].as_str().is_some_and(|name| name.ends_with(".zip"));
+        let candidate_copy = candidate.clone();
+        tokio::task::spawn_blocking(move || crate::engine_archive::extract(&archive, &candidate_copy, executable, is_zip)).await.map_err(internal)?.map_err(internal)?;
         #[cfg(unix)] {
             use std::os::unix::fs::PermissionsExt;
             std::fs::set_permissions(&candidate, std::fs::Permissions::from_mode(0o755)).map_err(internal)?;
@@ -138,6 +135,7 @@ pub async fn install_engine(State(state): State<AppState>) -> ApiResult<serde_js
     result
 }
 
+#[cfg(test)]
 fn digest_matches(bytes: &[u8], expected: &str) -> bool {
     format!("{:x}", Sha256::digest(bytes)).eq_ignore_ascii_case(expected)
 }
@@ -597,32 +595,10 @@ async fn init_repo(dir: &FsPath, remote: Option<String>) -> Result<(), ApiError>
 
 /// Pick the root .tex file: main.tex, else the shallowest .tex that contains \documentclass.
 fn detect_main(dir: &FsPath) -> String {
-    if dir.join("main.tex").is_file() {
-        return "main.tex".into();
-    }
-    let mut candidates: Vec<(usize, String)> = walkdir::WalkDir::new(dir)
-        .follow_links(false)
-        .into_iter()
-        .filter_entry(|e| e.file_name() != ".git")
-        .filter_map(|e| e.ok())
-        .filter(|e| {
-            e.file_type().is_file() && e.path().extension().map(|x| x == "tex").unwrap_or(false)
-        })
-        .filter(|e| {
-            std::fs::read_to_string(e.path())
-                .map(|s| s.contains("\\documentclass"))
-                .unwrap_or(false)
-        })
-        .map(|e| {
-            let rel = e.path().strip_prefix(dir).unwrap_or(e.path());
-            (e.depth(), rel.to_string_lossy().replace('\\', "/"))
-        })
-        .collect();
-    candidates.sort();
-    candidates
-        .into_iter()
-        .next()
-        .map(|(_, p)| p)
+    project_files(dir)
+        .ok()
+        .and_then(|files| files.into_iter().find(|file| file.main_candidate))
+        .map(|file| file.path)
         .unwrap_or_else(|| "main.tex".into())
 }
 
@@ -767,36 +743,11 @@ pub async fn import_url(
         return Err(bad(format!("'{name}' already exists")));
     }
     let tmp = state.cache.join(format!(".download-{name}.zip"));
-    let tmp_s = tmp.to_string_lossy().into_owned();
-    let dl = run(
-        &state.cache,
-        "curl",
-        &[
-            "-sSfL",
-            "-m",
-            "240",
-            "--proto",
-            "=https,http",
-            "--proto-redir",
-            "=https,http",
-            "--max-filesize",
-            "67108864",
-            "-A",
-            "gitleaf",
-            "-o",
-            &tmp_s,
-            "--",
-            &url,
-        ],
-    )
-    .await?;
-    if !dl.ok {
-        let _ = tokio::fs::remove_file(&tmp).await;
-        return Err(ApiError(
-            StatusCode::BAD_GATEWAY,
-            format!("download failed: {}", dl.stderr.trim()),
-        ));
-    }
+    state
+        .http
+        .import(&url, &tmp, Duration::from_secs(240), UPLOAD_LIMIT)
+        .await
+        .map_err(|e| ApiError(StatusCode::BAD_GATEWAY, format!("download failed: {e}")))?;
     let result = import_zip_file(&state, &name, &tmp, clean_remote(req.remote)).await;
     let _ = tokio::fs::remove_file(&tmp).await;
     result
@@ -1015,33 +966,17 @@ pub async fn overleaf_gallery(
         }
     }
     let url = format!("https://www.overleaf.com/latex/templates/tagged/{tag}");
-    let out = run(
-        &state.cache,
-        "curl",
-        &[
-            "-sSfL",
-            "-m",
-            "20",
-            "-A",
-            "Mozilla/5.0 (gitleaf)",
-            "--",
-            &url,
-        ],
-    )
-    .await?;
-    if !out.ok {
-        if out.stderr.contains("404") {
-            return Ok(Json(Vec::new()));
+    let body = match state.http.text(&url, Duration::from_secs(20)).await {
+        Ok(body) => body,
+        Err(e) if e.to_string().contains("404") => return Ok(Json(Vec::new())),
+        Err(e) => {
+            return Err(ApiError(
+                StatusCode::BAD_GATEWAY,
+                format!("could not reach the Overleaf gallery: {e}"),
+            ))
         }
-        return Err(ApiError(
-            StatusCode::BAD_GATEWAY,
-            format!(
-                "could not reach the Overleaf gallery: {}",
-                out.stderr.trim()
-            ),
-        ));
-    }
-    let items = parse_gallery(&out.stdout);
+    };
+    let items = parse_gallery(&body);
     let mut cache = state.gallery_cache.lock().await;
     cache.retain(|_, (when, _)| when.elapsed() < Duration::from_secs(1800));
     if cache.len() >= 64 {
@@ -1144,39 +1079,21 @@ pub async fn overleaf_source(
     }
     let title = q.title.unwrap_or_default();
     let mut out: Vec<SourceCandidate> = Vec::new();
-    if let Ok(page) = run(
-        &state.cache,
-        "curl",
-        &[
-            "-sSfL",
-            "-m",
-            "20",
-            "-A",
-            "Mozilla/5.0 (gitleaf)",
-            "--",
-            &url,
-        ],
-    )
-    .await
-    {
-        if page.ok {
-            let page_title = between(&page.stdout, "<title>", "</title>")
-                .unwrap_or("")
-                .trim();
-            let t = if title.is_empty() {
-                page_title.to_string()
-            } else {
-                title.clone()
-            };
-            for repo in github_repos_in(&page.stdout, &t).into_iter().take(3) {
-                out.push(SourceCandidate {
-                    url: format!("https://github.com/{repo}"),
-                    repo,
-                    stars: 0,
-                    description: "linked from the Overleaf template page".into(),
-                    source: "page".into(),
-                });
-            }
+    if let Ok(page) = state.http.text(&url, Duration::from_secs(20)).await {
+        let page_title = between(&page, "<title>", "</title>").unwrap_or("").trim();
+        let t = if title.is_empty() {
+            page_title.to_string()
+        } else {
+            title.clone()
+        };
+        for repo in github_repos_in(&page, &t).into_iter().take(3) {
+            out.push(SourceCandidate {
+                url: format!("https://github.com/{repo}"),
+                repo,
+                stars: 0,
+                description: "linked from the Overleaf template page".into(),
+                source: "page".into(),
+            });
         }
     }
     if out.is_empty() && !title.is_empty() {
@@ -1187,14 +1104,8 @@ pub async fn overleaf_source(
                 "https://api.github.com/search/repositories?q={}&sort=stars&per_page=5",
                 query.replace(' ', "+")
             );
-            if let Ok(res) = run(
-                &state.cache,
-                "curl",
-                &["-sSfL", "-m", "20", "-A", "gitleaf", "--", &api_url],
-            )
-            .await
-            {
-                if let Ok(json) = serde_json::from_str::<serde_json::Value>(&res.stdout) {
+            if let Ok(res) = state.http.text(&api_url, Duration::from_secs(20)).await {
+                if let Ok(json) = serde_json::from_str::<serde_json::Value>(&res) {
                     for item in json["items"].as_array().cloned().unwrap_or_default() {
                         let full = item["full_name"].as_str().unwrap_or("").to_string();
                         let name = full.split('/').nth(1).unwrap_or("").to_lowercase();
@@ -1280,6 +1191,8 @@ pub struct FileEntry {
     path: String,
     size: u64,
     text: bool,
+    generated: bool,
+    main_candidate: bool,
 }
 
 pub async fn list_files(
@@ -1309,13 +1222,20 @@ fn project_files(dir: &FsPath) -> Result<Vec<FileEntry>, ApiError> {
         }
         let rel = entry.path().strip_prefix(dir).unwrap_or(entry.path());
         let size = entry.metadata().map(|m| m.len()).unwrap_or(0);
+        let path = rel.to_string_lossy().replace('\\', "/");
         files.push(FileEntry {
-            path: rel.to_string_lossy().replace('\\', "/"),
+            generated: crate::latex_files::generated(&path),
+            main_candidate: false,
+            path,
             size,
             text: is_text(rel),
         });
     }
     files.sort_by(|a, b| a.path.cmp(&b.path));
+    let main = crate::latex_files::main_file(dir, files.iter().map(|file| file.path.as_str()));
+    for file in &mut files {
+        file.main_candidate = main.as_deref() == Some(file.path.as_str());
+    }
     Ok(files)
 }
 
@@ -2678,6 +2598,7 @@ mod tests {
         let project = root.join("paper");
         std::fs::create_dir_all(project.join(".git")).unwrap();
         let state = AppState {
+            http: crate::downloads::HttpClient::new().unwrap(),
             root: root.clone(),
             cache: root.join("cache"),
             port: 8077,

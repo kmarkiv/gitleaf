@@ -285,7 +285,7 @@ Your papers stay in the projects folder. Set `GITLEAF_NO_UPDATE_CHECK=1` to turn
 | Browser did not open | Keep GitLeaf running and open [http://127.0.0.1:8077](http://127.0.0.1:8077), or the configured port. In the Mac app, choose **Open GitLeaf in Browser** from the leaf menu. |
 | Mac app cannot start | Open `~/Library/Logs/GitLeaf/gitleaf.log`. If it reports an incomplete app, download a fresh official DMG and replace the app in Applications. |
 | "Port is occupied" | Another program uses port 8077. Stop it, or start GitLeaf with `--port 8078`. |
-| No LaTeX engine, or the Tectonic install fails | Accept the Compile offer while online, or install [full LaTeX](#install-full-latex-optional). Tectonic's automatic install needs `curl` and `tar`. |
+| No LaTeX engine, or the Tectonic install fails | Accept the Compile offer while online, or install [full LaTeX](#install-full-latex-optional). The published v0.3.5 installer needs `curl` and `tar`; newer source builds handle this internally. |
 | Full LaTeX installed but not used | In a new terminal check `latexmk -v`, add LaTeX to PATH if needed, and restart GitLeaf from that terminal. |
 | First compile is slow | Tectonic is downloading packages; later compiles reuse them. Watch progress under **Logs**. |
 | Clone, Pull or Push asks for a login | Sign in to that remote with Git in your terminal first, then retry in GitLeaf. |
@@ -322,6 +322,12 @@ How GitLeaf protects your files, and its request and size limits, are described 
 [docs/SECURITY.md](docs/SECURITY.md).
 
 ## Build from source
+
+The current source uses Rust for HTTP downloads, compiler archive extraction, generated-file
+classification and main-document detection. It reuses network connections and streams downloads
+with size limits and SHA-256 verification. Git and your LaTeX compiler remain separate tools;
+the browser handles interactive editing and PDF rendering.
+
 
 Only needed to change GitLeaf itself. Install [Rust](https://www.rust-lang.org/tools/install),
 [Node.js](https://nodejs.org/en/download) 22.13 or newer, and Git, then:

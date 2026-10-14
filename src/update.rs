@@ -5,7 +5,6 @@ use std::time::Instant;
 
 use axum::{extract::State, http::StatusCode, Json};
 use serde::Serialize;
-use sha2::{Digest, Sha256};
 
 use crate::AppState;
 
@@ -95,31 +94,6 @@ fn can_self_update() -> bool {
     current_manual_update_instructions().is_none()
 }
 
-async fn curl(state: &AppState, args: &[&str]) -> Result<String, String> {
-    let mut flags = vec![
-        "-sSfL",
-        "-m",
-        "60",
-        "--proto",
-        "=https",
-        "--proto-redir",
-        "=https",
-        "--max-filesize",
-        "134217728",
-        "-A",
-        "gitleaf-updater",
-    ];
-    flags.extend_from_slice(args);
-    let output = crate::api::run(&state.cache, "curl", &flags)
-        .await
-        .map_err(|_| "update request failed or timed out".to_string())?;
-    if output.ok {
-        Ok(output.stdout)
-    } else {
-        Err(output.stderr.trim().to_string())
-    }
-}
-
 fn trusted_asset(url: &str) -> bool {
     url.starts_with(&format!("https://github.com/{REPO}/releases/download/"))
 }
@@ -151,7 +125,11 @@ async fn fetch_latest(state: &AppState) -> UpdateInfo {
         error: None,
     };
     let url = format!("https://api.github.com/repos/{REPO}/releases/latest");
-    match curl(state, &["--", &url]).await {
+    match state
+        .http
+        .text(&url, std::time::Duration::from_secs(30))
+        .await
+    {
         Ok(body) => match serde_json::from_str::<serde_json::Value>(&body) {
             Ok(j) => {
                 let tag = j["tag_name"].as_str().unwrap_or("").to_string();
@@ -174,10 +152,10 @@ async fn fetch_latest(state: &AppState) -> UpdateInfo {
             Err(e) => info.error = Some(format!("unexpected response from GitHub: {e}")),
         },
         Err(e) => {
-            info.error = Some(if e.contains("404") {
+            info.error = Some(if e.to_string().contains("404") {
                 "no release published yet".into()
             } else {
-                e
+                e.to_string()
             })
         }
     }
@@ -259,13 +237,25 @@ pub async fn apply(
         .map_err(|e| err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     let downloaded = directory.join(format!("{}.new", asset_name()));
     let result = async {
-        curl(&state, &["-o", &downloaded.to_string_lossy(), "--", &url])
+        let actual = state
+            .http
+            .download(
+                &url,
+                &downloaded,
+                std::time::Duration::from_secs(60),
+                crate::downloads::BINARY_LIMIT,
+            )
             .await
-            .map_err(|e| err(StatusCode::BAD_GATEWAY, e))?;
+            .map_err(|e| err(StatusCode::BAD_GATEWAY, e.to_string()))?;
         let (base, _) = url
             .rsplit_once('/')
             .ok_or_else(|| err(StatusCode::BAD_GATEWAY, "invalid release URL"))?;
-        let sums = curl(&state, &["--", &format!("{base}/SHA256SUMS.txt")])
+        let sums = state
+            .http
+            .text(
+                &format!("{base}/SHA256SUMS.txt"),
+                std::time::Duration::from_secs(30),
+            )
             .await
             .map_err(|e| {
                 err(
@@ -279,10 +269,7 @@ pub async fn apply(
                 "release is missing a valid checksum for this platform",
             )
         })?;
-        let bytes = tokio::fs::read(&downloaded)
-            .await
-            .map_err(|e| err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-        if format!("{:x}", Sha256::digest(&bytes)) != expected {
+        if actual != expected {
             return Err(err(
                 StatusCode::BAD_GATEWAY,
                 "checksum mismatch; nothing was changed",
@@ -303,6 +290,9 @@ pub async fn apply(
                 "downloaded binary version does not match the release",
             ));
         }
+        let bytes = tokio::fs::read(&downloaded)
+            .await
+            .map_err(|e| err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
         let exe = std::env::current_exe()
             .map_err(|e| err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
         #[cfg(unix)]
