@@ -27,6 +27,7 @@ impl Fixture {
             restart: Default::default(),
             locks: Default::default(),
             gallery_cache: Default::default(),
+            presence: Default::default(),
         };
         Self { state, directory }
     }

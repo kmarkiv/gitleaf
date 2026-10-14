@@ -1304,6 +1304,37 @@ $('#vtoolbar').addEventListener('click', e => {
   window.addEventListener('mouseup', () => { if (!drag) return; drag.g.classList.remove('on'); document.body.classList.remove('dragging'); drag = null; preferences.setItem('gitleaf.panes', JSON.stringify(saved)); if (pdfv.doc) setZoom(pdfv.mode); });
 })();
 
+// ------------------------------------------------------------------ app lifecycle
+// Each tab keeps a live connection to GitLeaf. Quitting GitLeaf closes the tab (or, where the
+// browser refuses, says it quit); closing the last tab lets GitLeaf quit. Update restarts are
+// announced separately, so the tab waits and reloads instead.
+function showStopped(message) {
+  // Open dialogs sit in the browser's top layer and would cover the message.
+  $$('dialog[open]').forEach(d => d.close());
+  const el = $('#app-stopped'); el.querySelector('.msg').textContent = message; el.hidden = false;
+}
+function hideStopped() { $('#app-stopped').hidden = true; }
+function gitleafQuit() {
+  if (anyDirty()) { showStopped('GitLeaf has quit before your last edits were saved. Open GitLeaf again and they will be saved from this tab.'); return; }
+  showStopped('GitLeaf has quit. You can close this tab.');
+  window.close(); // browsers allow this for a tab GitLeaf opened itself; otherwise the message stays
+}
+(function lifecycle() {
+  if (!window.EventSource) return;
+  let failures = 0;
+  const events = new EventSource('/api/events');
+  events.addEventListener('hello', () => { failures = 0; hideStopped(); });
+  events.addEventListener('ending', e => { if (e.data !== 'quit' || state.updating) return; gitleafQuit(); });
+  // The browser reconnects by itself; if GitLeaf is started again, this tab picks up where it was.
+  events.onerror = () => {
+    if (state.updating) return;
+    failures += 1;
+    if (failures >= 3 && $('#app-stopped').hidden) showStopped('GitLeaf is not running. Open GitLeaf again and this tab reconnects by itself.');
+  };
+  // A tab the browser freezes or discards is not a closed tab: keep GitLeaf running.
+  document.addEventListener('freeze', () => { try { navigator.sendBeacon('/api/presence/hold'); } catch (e) { /* best effort */ } });
+})();
+
 // ------------------------------------------------------------------ start
 Object.assign(window.gitleaf, { cm, view, openProject, openFile, closeTab, save, compile, enterVisual, exitVisual, renderVisual, syncFromVisual, parseDoc, parseBlocks, renderBlocks, serializeBlocks, serializeDoc, setEditorValue, markDirty, markEdited, openNew, showPdf, loadPdf, pdfv, setFocus, toggleSidebar, forwardSync, jumpTo, showProblems, renderProblems, menu, toast });
 fetch('/api/health').then(r => r.json()).then(h => { state.health = h; }).catch(() => {});

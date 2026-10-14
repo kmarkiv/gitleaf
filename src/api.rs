@@ -2686,6 +2686,7 @@ mod tests {
             restart: Default::default(),
             locks: Default::default(),
             gallery_cache: Default::default(),
+            presence: Default::default(),
         };
         let first = compile_directory(&state, "paper", "one/main.tex").unwrap();
         let second = compile_directory(&state, "paper", "two/main.tex").unwrap();

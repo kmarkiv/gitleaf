@@ -6,6 +6,7 @@
 
 mod api;
 mod assets;
+mod presence;
 mod security;
 mod storage;
 mod templates;
@@ -39,6 +40,8 @@ pub struct AppState {
     pub locks: Arc<Mutex<HashMap<String, std::sync::Weak<Mutex<()>>>>>,
     /// Overleaf gallery pages, cached for half an hour per tag.
     pub gallery_cache: GalleryCache,
+    /// Open browser tabs; quitting closes them and closing the last one can quit GitLeaf.
+    pub presence: Arc<presence::Presence>,
 }
 
 fn env_path(var: &str, default: impl FnOnce() -> PathBuf) -> PathBuf {
@@ -121,7 +124,8 @@ USAGE: gitleaf [--root DIR] [--cache DIR] [--port N] [--no-open]
   --port N      listen port on 127.0.0.1 (default 8077)
   --no-open     do not open the browser on start
 Environment variables GITLEAF_ROOT, GITLEAF_CACHE, GITLEAF_PORT, GITLEAF_ENGINE (latexmk|tectonic)
-and GITLEAF_NO_OPEN do the same.
+and GITLEAF_NO_OPEN do the same. When GitLeaf opens the browser, closing the last GitLeaf tab quits
+it after a few seconds; GITLEAF_EXIT_WHEN_CLOSED=0 keeps it running (=1 enables it with --no-open).
 ";
 
 #[tokio::main]
@@ -182,7 +186,15 @@ async fn main() -> anyhow::Result<()> {
         cache: cache.canonicalize()?,
         locks: Default::default(),
         gallery_cache: Default::default(),
+        presence: Default::default(),
     };
+    // Closing the last tab quits GitLeaf when GitLeaf opened the browser itself (normal use);
+    // --no-open servers (tests, development) keep running. GITLEAF_EXIT_WHEN_CLOSED overrides.
+    let exit_when_closed = match std::env::var("GITLEAF_EXIT_WHEN_CLOSED") {
+        Ok(value) => value != "0",
+        Err(_) => open,
+    };
+    state.presence.set_exit_when_closed(exit_when_closed);
 
     if state.root == state.cache
         || state.cache.starts_with(&state.root)
@@ -224,7 +236,17 @@ async fn main() -> anyhow::Result<()> {
     }
     update::cleanup_after_update();
     axum::serve(listener, app)
-        .with_graceful_shutdown(shutdown(state.shutdown.clone()))
+        .with_graceful_shutdown({
+            let state = state.clone();
+            async move {
+                shutdown(state.shutdown.clone()).await;
+                // Tell open tabs whether to close (quit) or wait and reload (update restart).
+                let restarting = state.restart.load(std::sync::atomic::Ordering::SeqCst);
+                state
+                    .presence
+                    .announce(if restarting { "restart" } else { "quit" });
+            }
+        })
         .await?;
     if state.restart.load(std::sync::atomic::Ordering::SeqCst) {
         let args = std::env::args()
@@ -233,6 +255,14 @@ async fn main() -> anyhow::Result<()> {
         std::process::Command::new(std::env::current_exe()?)
             .args(args)
             .arg("--no-open")
+            .env(
+                "GITLEAF_EXIT_WHEN_CLOSED",
+                if state.presence.exit_when_closed() {
+                    "1"
+                } else {
+                    "0"
+                },
+            )
             .stdin(std::process::Stdio::null())
             .spawn()?;
     }
@@ -286,6 +316,8 @@ fn router(state: AppState) -> Router {
         .route("/", get(api::index))
         .route("/assets/{*path}", get(assets::serve))
         .route("/api/health", get(api::health))
+        .route("/api/events", get(presence::events))
+        .route("/api/presence/hold", post(presence::hold))
         .route("/api/engine/install", post(api::install_engine))
         .route("/api/update/check", get(update::check))
         .route("/api/update/apply", post(update::apply))

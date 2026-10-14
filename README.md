@@ -200,8 +200,13 @@ With full LaTeX, GitLeaf builds with **pdfLaTeX** through `latexmk`, with shell 
 
 If GitLeaf is already running, starting it again just reopens the browser.
 
-**Stop:** wait for **Saved**, then choose **Quit GitLeaf** from the leaf menu (Mac app), or press
-**Ctrl+C** in the Terminal or console window. Closing the browser tab alone leaves GitLeaf running.
+**Stop:** wait for **Saved**, then close the GitLeaf tab. When the last GitLeaf tab is closed,
+GitLeaf quits by itself a few seconds later (reloading the page or switching tabs does not count).
+It works the other way round too: **Quit GitLeaf** from the leaf menu (Mac app), or **Ctrl+C** in the
+Terminal or console window, closes the GitLeaf tab, or shows "GitLeaf has quit" if the browser
+does not let pages close themselves. Unsaved edits stay on screen and are saved when you open GitLeaf
+again. A GitLeaf started with `--no-open` keeps running until you stop it; `GITLEAF_EXIT_WHEN_CLOSED=0`
+turns the automatic quit off.
 
 **Find your papers:** normally in `Documents/gitleaf` in your home folder, one folder per paper.
 An existing `Documents/Codex/Overleaf` folder is reused for compatibility; if `Documents/gitleaf`
@@ -304,6 +309,7 @@ gitleaf [--root DIR] [--cache DIR] [--port N] [--no-open]
 | `GITLEAF_ENGINE` | automatic | `latexmk` or `tectonic` |
 | `GITLEAF_NO_OPEN`, `--no-open` | | Do not open the browser on start |
 | `GITLEAF_NO_UPDATE_CHECK` | | Turn off automatic update checks |
+| `GITLEAF_EXIT_WHEN_CLOSED` | on when GitLeaf opens the browser | `0`: keep running after the last tab closes; `1`: quit after the last tab closes even with `--no-open` |
 
 ## Limits
 
